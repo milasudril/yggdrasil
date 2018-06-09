@@ -1,0 +1,3 @@
+[submodule "strint"]
+	path = strint
+	url = https://github.com/milasudril/strint
