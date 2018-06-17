@@ -15,38 +15,55 @@
 #include <variant>
 #include <map>
 #include <memory>
+#include <cstring>
+#include <array>
 
 namespace DataStore
 	{
 	class Compound;
-		
+	
+	template<class T>
+	using Array = std::vector<T>;
+	
+	using Int8 = Strint::Int8;
+	using Int16 = Strint::Int16;
+	using Int32 = Strint::Int32;
+	using Int64 = Strint::Int64;
+	using UInt8 = Strint::UInt8;
+	using UInt16 = Strint::UInt16;
+	using UInt32 = Strint::UInt32;
+	using UInt64 = Strint::UInt64;
+	using Float = float;
+	using Double = double;
+	using String = std::string;
+
 	using var_t = std::variant
 		<
-		 Strint::Int8
-		,Strint::Int16
-		,Strint::Int32
-		,Strint::Int64
-		,Strint::UInt8
-		,Strint::UInt16
-		,Strint::UInt32
-		,Strint::UInt64
-		,float
-		,double
-		,std::unique_ptr<std::string>
+		 Int8
+		,Int16
+		,Int32
+		,Int64
+		,UInt8
+		,UInt16
+		,UInt32
+		,UInt64
+		,Float
+		,Double
+		,std::unique_ptr<String>
 		,std::unique_ptr<Compound>
 		
-		,std::vector<Strint::Int8 >
-		,std::vector<Strint::Int16>
-		,std::vector<Strint::Int32>
-		,std::vector<Strint::Int64>
-		,std::vector<Strint::UInt8>
-		,std::vector<Strint::UInt16>
-		,std::vector<Strint::UInt32>
-		,std::vector<Strint::UInt64>
-		,std::vector<float>
-		,std::vector<double>
-		,std::vector<std::string>
-		,std::vector<Compound>
+		,Array<Int8 >
+		,Array<Int16>
+		,Array<Int32>
+		,Array<Int64>
+		,Array<UInt8>
+		,Array<UInt16>
+		,Array<UInt32>
+		,Array<UInt64>
+		,Array<Float>
+		,Array<Double>
+		,Array<String>
+		,Array<Compound>
 		>;
 	
 	template<class T>
@@ -76,10 +93,87 @@ namespace DataStore
 			{return nullptr;}
 		return temp->get();
 		}
+		
+
+		
+	template<class T>
+	constexpr decltype(T::typeName()) getTypeName() noexcept
+		{return T::typeName();}
+	
+	template<class T>
+	constexpr std::enable_if_t<std::is_same_v<T, String>, char const*> getTypeName() noexcept
+		{return "str";}
+		
+	template<class T>
+	constexpr std::enable_if_t<std::is_same_v<T, Float>, char const*> getTypeName() noexcept
+		{return "f20";}
+		
+	template<class T>
+	constexpr std::enable_if_t<std::is_same_v<T, Double>, char const*> getTypeName() noexcept
+		{return "f40";}
+		
+		
+	
+	namespace detail
+		{
+		// Helper function for concatenating two string sources into a std::array.
+		template<class SrcA, class SrcB>
+		constexpr auto strcat(SrcA const& a, SrcB const& b) noexcept
+			{
+			constexpr auto ptr_a = a();
+			constexpr auto ptr_b = b();
+			constexpr auto N_a = strlen(ptr_a);
+			constexpr auto N_b = strlen(ptr_b);
+
+			std::array<char, N_a + N_b + 1> ret{};
+			auto ptr_src = ptr_a;
+			auto ptr_dest = ret.begin();
+			while(*ptr_src)
+				{
+				*ptr_dest = *ptr_src;
+				++ptr_dest;
+				++ptr_src;
+				}
+			
+			ptr_src = ptr_b;
+			while(*ptr_src)
+				{
+				*ptr_dest = *ptr_src;
+				++ptr_dest;
+				++ptr_src;
+				}
+
+			return ret;
+			}
+		}
+	
+	template<class T>
+	struct ArrayTypeName
+		{
+		public:
+			static constexpr char const* typeName() noexcept
+				{return retval;}
+
+		private:
+			static constexpr auto val = detail::strcat([](){return getTypeName<T>();}
+				, [](){return "a";});
+			static constexpr auto retval = val.begin();
+		};
+		
+	template<class T>
+	constexpr decltype(getTypeName<typename T::value_type>()) getTypeName() noexcept
+		{
+		using Type = typename T::value_type;
+		return ArrayTypeName<Type>::typeName();
+		}
+
 	
 	class Compound
 		{
 		public:
+			static constexpr char const* typeName() noexcept
+				{return "obj";}
+			
 			Compound() : m_src_loc(std::make_unique<SourceLocation>())
 				{}
 			
@@ -113,7 +207,7 @@ namespace DataStore
 				
 				auto ret = extract_val<Type>(&i->second);
 				if(ret == nullptr)
-					{throw TypeMismatchException(key, "", sourceLocation());}
+					{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
 
 				return *ret;
 				}
