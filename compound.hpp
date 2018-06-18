@@ -190,7 +190,7 @@ namespace DataStore
 				
 
 				
-			var_t const* getIf(std::string const& key) const noexcept
+			var_t const* find(std::string const& key) const noexcept
 				{
 				auto i = m_content.find(key);
 				if(i == m_content.end())
@@ -198,12 +198,12 @@ namespace DataStore
 				return &i->second;
 				}
 			
-			var_t* getIf(std::string const& key) noexcept
-				{return const_cast<var_t*>(const_cast<Compound const*>(this)->getIf(key));}
+			var_t* find(std::string const& key) noexcept
+				{return const_cast<var_t*>(const_cast<Compound const*>(this)->find(key));}
 				
 			auto typeOfValue(std::string const& key) const noexcept
 				{
-				auto val = getIf(key);
+				auto val = find(key);
 				if(val == nullptr)
 					{return std::variant_npos;}
 				return val->index();
@@ -211,7 +211,7 @@ namespace DataStore
 			
 			var_t const& get(std::string const& key) const
 				{
-				auto val = getIf(key);
+				auto val = find(key);
 				if(val == nullptr)
 					{throw KeyNotFoundException(key, sourceLocation());}
 				return *val;
@@ -226,7 +226,7 @@ namespace DataStore
 			template<class Type>
 			Type const* getIf(std::string const& key) const noexcept
 				{
-				auto val = getIf(key);
+				auto val = find(key);
 				if(val == nullptr)
 					{return nullptr;}
 				return extract_val<Type>(val);
