@@ -105,6 +105,10 @@ namespace DataStore
 		{return "str";}
 		
 	template<class T>
+	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<String>>, char const*> getTypeName() noexcept
+		{return getTypeName<String>();}
+		
+	template<class T>
 	constexpr std::enable_if_t<std::is_same_v<T, Float>, char const*> getTypeName() noexcept
 		{return "f20";}
 		
@@ -280,6 +284,10 @@ namespace DataStore
 			std::map<std::string, var_t> m_content;
 			std::unique_ptr<SourceLocation> m_src_loc;
 		};
+		
+	template<class T>
+	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<Compound>>, char const*> getTypeName() noexcept
+		{return getTypeName<Compound>();}
 	};
 
 #endif

@@ -121,6 +121,14 @@ STIC_TESTCASE("Test builtin types")
 	STIC_ASSERT(obj.get<Compound>(keys[22]).get<String>("Sub-key") == "Foo");
 	STIC_ASSERT(obj.get<Array<Compound>>(keys[23]).size() == 2);
 	
+	std::for_each(obj.begin(), obj.end(), [](const auto& val)
+		{
+		printf("%s %s\n", val.first.c_str(), std::visit([](const auto& var)
+			{
+			return getTypeName<std::decay_t<decltype(var)>>();
+			},val.second));
+		});
+	
 //	Now remove all keys
 	static_assert(sizeof(keys) > 8);
 	std::for_each(std::begin(keys), std::end(keys), [&obj](const auto& key)
