@@ -192,6 +192,14 @@ namespace DataStore
 				return *this;
 				}
 				
+			template<class KeyType, class Type>
+			bool insert(KeyType&& key, Type&& value)
+				{
+				auto ip = m_content.insert(std::make_pair(std::forward<KeyType>(key)
+					,make_var(std::forward<Type>(value))));
+				return ip->second;
+				}
+				
 
 				
 			var_t const* find(std::string const& key) const noexcept
