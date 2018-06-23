@@ -8,6 +8,7 @@
 #include "key_not_found_exception.hpp"
 #include "type_mismatch_exception.hpp"
 #include "var.hpp"
+#include "type_names.hpp"
 
 #include <map>
 #include <memory>
