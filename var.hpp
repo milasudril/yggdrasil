@@ -87,29 +87,31 @@ namespace DataStore
 
 	namespace detail
 		{
-		template<class Visitor, int N = std::variant_size_v<var_t>>
+		template<class Visitor, class VariantType, int N = std::variant_size_v<VariantType>>
 		struct VarTypeEnumerator
 			{
 			static void iterate(Visitor&& f)
 				{
-				using CurrentType = decltype(std::get<N-1>(var_t{}));
+				using CurrentType = decltype(std::get<N-1>(VariantType{}));
 				f.template visit<CurrentType>(std::forward<Visitor>(f));
-				VarTypeEnumerator<Visitor, N - 1>::iterate(std::forward<Visitor>(f));
+				VarTypeEnumerator<Visitor, VariantType, N - 1>::iterate(std::forward<Visitor>(f));
 				}
 			};
 
-		template<class Visitor>
-		struct VarTypeEnumerator<Visitor, 0>
+		template<class Visitor, class VariantType>
+		struct VarTypeEnumerator<Visitor, VariantType, 0>
 			{
 			static void iterate(Visitor&& f) { }
 			};
 		}
 
-	template<class Visitor>
+	template<class Visitor, class VariantType = var_t>
 	void enumTypes(Visitor&& visitor)
 		{
-		detail::VarTypeEnumerator<Visitor>::iterate(std::forward<Visitor>(visitor));
+		detail::VarTypeEnumerator<Visitor, VariantType>::iterate(std::forward<Visitor>(visitor));
 		}
+
+
 
 	}
 #endif
