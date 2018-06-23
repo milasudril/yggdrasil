@@ -1,6 +1,4 @@
-//@	{
-//@	 "targets":[{"name": "compound.hpp", "type":"include"}]
-//@	}
+//@	{"targets":[{"name": "compound.hpp", "type":"include"}]}
 
 #ifndef DATA_STORE_COMPOUND_HPP
 #define DATA_STORE_COMPOUND_HPP

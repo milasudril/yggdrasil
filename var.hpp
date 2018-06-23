@@ -1,4 +1,4 @@
-//@	{"targets":[{"name":"var","type":"include"}]}
+//@	{"targets":[{"name":"var.hpp","type":"include"}]}
 
 #ifndef DATA_STORE_VAR_HPP
 #define DATA_STORE_VAR_HPP
