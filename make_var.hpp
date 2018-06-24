@@ -18,14 +18,14 @@ namespace DataStore
 	make_var(T&& val)
 		{return VariantType{std::make_unique<std::remove_reference_t<T>>(std::forward<T>(val))};}
 
-	template<class VariantType, class T>
+	template<class T, class VariantType>
 	std::enable_if_t<std::is_constructible_v<VariantType, T>, T const*>
-	extract_val(VariantType const* x)
+	get_if(VariantType const* x)
 		{return std::get_if<T>(x);}
 
-	template<class VariantType, class T>
+	template<class T, class VariantType>
 	std::enable_if_t<std::is_constructible_v<VariantType, std::unique_ptr<T>>, T const*>
-	extract_val(VariantType const* x)
+	get_if(VariantType const* x)
 		{
 		auto temp = std::get_if<std::unique_ptr<T>>(x);
 		if(temp == nullptr)
