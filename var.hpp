@@ -45,7 +45,7 @@ namespace DataStore
 		,std::unique_ptr<String>
 		,std::unique_ptr<Compound>
 
-		,Array<Int8 >
+		,Array<Int8>
 		,Array<Int16>
 		,Array<Int32>
 		,Array<Int64>
@@ -85,32 +85,6 @@ namespace DataStore
 		if(temp == nullptr)
 			{return nullptr;}
 		return temp->get();
-		}
-
-	namespace detail
-		{
-		template<class Visitor, class VariantType, int N = std::variant_size_v<VariantType>>
-		struct VarTypeEnumerator
-			{
-			static void iterate(Visitor&& f)
-				{
-				using CurrentType = decltype(std::get<N-1>(VariantType{}));
-				f.template visit<CurrentType>(std::forward<Visitor>(f));
-				VarTypeEnumerator<Visitor, VariantType, N - 1>::iterate(std::forward<Visitor>(f));
-				}
-			};
-
-		template<class Visitor, class VariantType>
-		struct VarTypeEnumerator<Visitor, VariantType, 0>
-			{
-			static void iterate(Visitor&& f) { }
-			};
-		}
-
-	template<class Visitor, class VariantType = var_t>
-	void enumTypes(Visitor&& visitor)
-		{
-		detail::VarTypeEnumerator<Visitor, VariantType>::iterate(std::forward<Visitor>(visitor));
 		}
 	}
 #endif
