@@ -5,14 +5,61 @@
 
 #include "key_not_found_exception.hpp"
 #include "type_mismatch_exception.hpp"
-#include "var.hpp"
+#include "make_var.hpp"
 #include "type_names.hpp"
+#include "strint/common_types.hpp"
 
+#include <string>
+#include <vector>
 #include <map>
 #include <memory>
 
 namespace DataStore
 	{
+	template<class T>
+	using Array = std::vector<T>;
+
+	using Int8 = Strint::Int8;
+	using Int16 = Strint::Int16;
+	using Int32 = Strint::Int32;
+	using Int64 = Strint::Int64;
+	using UInt8 = Strint::UInt8;
+	using UInt16 = Strint::UInt16;
+	using UInt32 = Strint::UInt32;
+	using UInt64 = Strint::UInt64;
+	using Float = float;
+	using Double = double;
+	using String = std::string;
+
+	using var_t = std::variant
+		<
+		 Int8
+		,Int16
+		,Int32
+		,Int64
+		,UInt8
+		,UInt16
+		,UInt32
+		,UInt64
+		,Float
+		,Double
+		,std::unique_ptr<String>
+		,std::unique_ptr<Compound>
+
+		,Array<Int8>
+		,Array<Int16>
+		,Array<Int32>
+		,Array<Int64>
+		,Array<UInt8>
+		,Array<UInt16>
+		,Array<UInt32>
+		,Array<UInt64>
+		,Array<Float>
+		,Array<Double>
+		,Array<String>
+		,Array<Compound>
+		>;
+
 	class Compound
 		{
 		public:

@@ -2,15 +2,7 @@
 
 #include "compound.hpp"
 #include "stic/stic.hpp"
-#include "strint/make_value.hpp"
 
-template<class T>
-std::enable_if_t<std::is_default_constructible_v<T>, T> createDefault()
-	{return T{};}
-
-template<class T>
-decltype(Strint::make_default<T>()) createDefault()
-	{return Strint::make_default<T>();}
 
 STIC_TESTCASE("Set values")
 	{
