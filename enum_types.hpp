@@ -14,8 +14,8 @@ namespace DataStore
 			{
 			static void iterate(Visitor&& f)
 				{
-				using CurrentType = decltype(std::get<N - 1>(VariantType{}));
-				f.template visit<CurrentType>();
+				using CurrentType = decltype(*std::get_if<N - 1>(static_cast<VariantType*>(nullptr)));
+				f.template visit<std::remove_reference_t<CurrentType>, N - 1>();
 				VarTypeEnumerator<Visitor, VariantType, N - 1>::iterate(std::forward<Visitor>(f));
 				}
 			};
