@@ -6,6 +6,13 @@
 
 STIC_TESTCASE("Set values")
 	{
+	DataStore::Compound foo;
+	foo.set("val", DataStore::UInt32{1});
+		{
+		DataStore::Compound bar;
+		foo.set<std::string, DataStore::Compound>("bar",std::move(bar));
+		}
+	foo.set("Obj", DataStore::Compound{});
 	}
 
 #if 0

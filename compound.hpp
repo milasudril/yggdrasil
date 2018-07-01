@@ -27,9 +27,11 @@ namespace DataStore
 	using UInt16 = Strint::UInt16;
 	using UInt32 = Strint::UInt32;
 	using UInt64 = Strint::UInt64;
-	using Float = float;
-	using Double = double;
+	using Float32 = float;
+	using Float64 = double;
 	using String = std::string;
+	
+	class Compound;
 
 	using var_t = std::variant
 		<
@@ -41,8 +43,8 @@ namespace DataStore
 		,UInt16
 		,UInt32
 		,UInt64
-		,Float
-		,Double
+		,Float32
+		,Float64
 		,std::unique_ptr<String>
 		,std::unique_ptr<Compound>
 
@@ -54,8 +56,8 @@ namespace DataStore
 		,Array<UInt16>
 		,Array<UInt32>
 		,Array<UInt64>
-		,Array<Float>
-		,Array<Double>
+		,Array<Float32>
+		,Array<Float64>
 		,Array<String>
 		,Array<Compound>
 		>;
@@ -76,7 +78,7 @@ namespace DataStore
 			Compound& set(KeyType&& key, Type&& value)
 				{
 				m_content.insert_or_assign(std::forward<KeyType>(key)
-					,make_var(std::forward<Type>(value)));
+					,make_var<var_t>(std::forward<Type>(value)));
 				return *this;
 				}
 
@@ -84,7 +86,7 @@ namespace DataStore
 			bool insert(KeyType&& key, Type&& value)
 				{
 				auto ip = m_content.insert(std::make_pair(std::forward<KeyType>(key)
-					,make_var(std::forward<Type>(value))));
+					,make_var<var_t>(std::forward<Type>(value))));
 				return ip->second;
 				}
 
@@ -129,7 +131,7 @@ namespace DataStore
 				auto val = find(key);
 				if(val == nullptr)
 					{return nullptr;}
-				return extract_val<Type>(val);
+				return DataStore::get_if<Type>(val);
 				}
 
 			template<class Type>
@@ -140,7 +142,7 @@ namespace DataStore
 			Type const& get(std::string const& key) const
 				{
 				auto& val = get(key);
-				auto ret = extract_val<Type>(&val);
+				auto ret = DataStore::get_if<Type>(&val);
 				if(ret == nullptr)
 					{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
 				return *ret;

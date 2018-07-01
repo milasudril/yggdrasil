@@ -3,26 +3,29 @@
 #ifndef DATA_STORE_TYPE_NAMES_HPP
 #define DATA_STORE_TYPE_NAMES_HPP
 
+#include <cstring>
+#include <array>
+
 namespace DataStore
-	{
+	{		
 	template<class T>
 	constexpr decltype(T::typeName()) getTypeName() noexcept
 		{return T::typeName();}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, String>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<T, std::string>, char const*> getTypeName() noexcept
 		{return "str";}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<String>>, char const*> getTypeName() noexcept
-		{return getTypeName<String>();}
+	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<std::string>>, char const*> getTypeName() noexcept
+		{return getTypeName<std::string>();}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, Float>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<T, float>, char const*> getTypeName() noexcept
 		{return "f20";}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, Double>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<T, double>, char const*> getTypeName() noexcept
 		{return "f40";}
 
 	namespace detail
