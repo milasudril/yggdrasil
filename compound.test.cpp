@@ -1,18 +1,65 @@
 //@	{"targets":[{"name":"compound.test","type":"application","autorun":1}]}
 
 #include "compound.hpp"
+#include "make_default.hpp"
+#include "enum_types.hpp"
+
 #include "stic/stic.hpp"
 
+#include <type_traits>
 
-STIC_TESTCASE("Set values")
+class ValInserter
 	{
-	DataStore::Compound foo;
-	foo.set("val", DataStore::UInt32{1});
-		{
-		DataStore::Compound bar;
-		foo.set<std::string, DataStore::Compound>("bar",std::move(bar));
-		}
-	foo.set("Obj", DataStore::Compound{});
+	public:
+		template<class T, int N>
+		void visit()
+			{
+			using OtherType = std::remove_reference_t<decltype(*std::get_if<N==0? 1 : N - 1>(static_cast<DataStore::var_t*>(nullptr)))>;
+			
+			DataStore::Compound obj;
+			STIC_ASSERT(obj.empty());
+
+			STIC_ASSERT(obj.insert("key 1", DataStore::make_default<T>()));
+			STIC_ASSERT(!obj.insert("key 1", DataStore::make_default<T>()));
+			STIC_ASSERT(!obj.insert("key 1", DataStore::make_default<OtherType>()));
+			STIC_ASSERT(obj.find("key 1"));
+			
+			STIC_ASSERT(!obj.find("key 2"));
+			STIC_ASSERT(obj.insert("key 2", DataStore::make_default<T>()));
+			STIC_ASSERT(obj.find("key 2"));
+			
+			STIC_ASSERT(!obj.find("key 3"));
+			obj.set("key 3", DataStore::make_default<T>());
+			STIC_ASSERT(obj.find("key 3"));
+			obj.set("key 2", DataStore::make_default<T>());
+			
+			STIC_ASSERT(obj.typeOfValue("key 3") == N);
+			STIC_ASSERT(obj.typeOfValue("bad key") == std::variant_npos);
+			
+			STIC_ASSERT(obj.get("key 3").index() == N);
+			STIC_ASSERT_THROW(obj.get("bad key"););
+			
+			STIC_ASSERT(obj.getIf<T>("key 3"));
+			STIC_ASSERT(!obj.getIf<OtherType>("key 3"));
+			obj.set("key 3", DataStore::make_default<OtherType>());
+			STIC_ASSERT(obj.getIf<OtherType>("key 3"));
+			STIC_ASSERT(!obj.getIf<T>("key 3"));
+			
+			STIC_ASSERT(obj.get<T>("key 2") == DataStore::make_default<T>());
+			STIC_ASSERT_THROW(obj.get<T>("key 3"););
+			
+			STIC_ASSERT(obj.size() == 3);
+			obj.remove("key 2");
+			STIC_ASSERT(!obj.find("key 2"));
+			STIC_ASSERT(obj.size() == 2);
+			STIC_ASSERT(obj.insert("key 2", DataStore::make_default<T>()));
+			STIC_ASSERT(obj.size() == 3);
+			}
+	};
+
+STIC_TESTCASE("Set and get values")
+	{
+	DataStore::enumTypes<DataStore::var_t>(ValInserter{});
 	}
 
 #if 0

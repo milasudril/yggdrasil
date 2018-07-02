@@ -87,7 +87,7 @@ namespace DataStore
 				{
 				auto ip = m_content.insert(std::make_pair(std::forward<KeyType>(key)
 					,make_var<var_t>(std::forward<Type>(value))));
-				return ip->second;
+				return ip.second;
 				}
 
 
@@ -139,14 +139,7 @@ namespace DataStore
 				{return const_cast<Type*>(const_cast<Compound const*>(this)->getIf<Type>(key));}
 
 			template<class Type>
-			Type const& get(std::string const& key) const
-				{
-				auto& val = get(key);
-				auto ret = DataStore::get_if<Type>(&val);
-				if(ret == nullptr)
-					{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
-				return *ret;
-				}
+			inline Type const& get(std::string const& key) const;
 
 			template<class Type>
 			Type& get(std::string const& key)
@@ -186,6 +179,25 @@ namespace DataStore
 	template<class T>
 	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<Compound>>, char const*> getTypeName() noexcept
 		{return getTypeName<Compound>();}
+		
+
+	template<class Type>
+	inline Type const& Compound::get(std::string const& key) const
+		{
+		auto& val = get(key);
+		auto ret = DataStore::get_if<Type>(&val);
+		if(ret == nullptr)
+			{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
+		return *ret;
+		}
+
+	bool operator==(const Compound& a, const Compound& b)
+		{
+		if(a.size() != b.size())
+			{return false;}
+		
+		return std::equal(std::begin(a), std::end(a), std::begin(b));
+		}
 	};
 
 #endif
