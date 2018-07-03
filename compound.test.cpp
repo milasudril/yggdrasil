@@ -61,6 +61,22 @@ STIC_TESTCASE("Set and get values")
 	{
 	DataStore::enumTypes<DataStore::var_t>(ValInserter{});
 	}
+	
+STIC_TESTCASE("Set and get string")
+	{
+	DataStore::Compound obj;
+	obj.set("foo", DataStore::String("bar"));
+	STIC_ASSERT(obj.get<DataStore::String>("foo") == "bar");
+	}
+	
+	
+STIC_TESTCASE("Set and get compound")
+	{
+	DataStore::Compound obj;
+	obj.set("foo", DataStore::Compound{});
+	STIC_ASSERT_NOTHROW(obj.get<DataStore::Compound>("foo"););
+	}
+
 
 #if 0
 
