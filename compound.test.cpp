@@ -45,7 +45,7 @@ class ValInserter
 			STIC_ASSERT(obj.getIf<OtherType>("key 3"));
 			STIC_ASSERT(!obj.getIf<T>("key 3"));
 			
-			STIC_ASSERT(obj.get<T>("key 2") == DataStore::make_default<T>());
+			STIC_ASSERT_NOTHROW(obj.get<T>("key 2"););
 			STIC_ASSERT_THROW(obj.get<T>("key 3"););
 			
 			STIC_ASSERT(obj.size() == 3);

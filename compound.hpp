@@ -190,14 +190,6 @@ namespace DataStore
 			{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
 		return *ret;
 		}
-
-	bool operator==(const Compound& a, const Compound& b)
-		{
-		if(a.size() != b.size())
-			{return false;}
-		
-		return std::equal(std::begin(a), std::end(a), std::begin(b));
-		}
 	};
 
 #endif
