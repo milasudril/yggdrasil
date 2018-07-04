@@ -76,6 +76,19 @@ STIC_TESTCASE("Set and get compound")
 	obj.set("foo", DataStore::Compound{});
 	STIC_ASSERT_NOTHROW(obj.get<DataStore::Compound>("foo"););
 	}
+	
+void findMe(std::string const&)
+{}
+
+void findMe(DataStore::Compound const&)
+{}
+
+void findMe(DataStore::Int32)
+{printf("Omg\n");}
+
+template<class T>
+void findMe(T const&)
+{}
 
 STIC_TESTCASE("Visit items")
 	{
@@ -86,7 +99,8 @@ STIC_TESTCASE("Visit items")
 	
 	obj.visitItems([](auto const item)
 		{
-		printf("%s ",item.first.c_str());
+		printf("%s %s\n", item.first.c_str(), DataStore::getTypeName<std::decay_t<decltype(item.second)>>());
+		findMe(item.second);
 		});
 	}
 
