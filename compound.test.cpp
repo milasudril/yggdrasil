@@ -61,7 +61,7 @@ STIC_TESTCASE("Set and get values")
 	{
 	DataStore::enumTypes<DataStore::var_t>(ValInserter{});
 	}
-	
+
 STIC_TESTCASE("Set and get string")
 	{
 	DataStore::Compound obj;
@@ -75,6 +75,19 @@ STIC_TESTCASE("Set and get compound")
 	DataStore::Compound obj;
 	obj.set("foo", DataStore::Compound{});
 	STIC_ASSERT_NOTHROW(obj.get<DataStore::Compound>("foo"););
+	}
+
+STIC_TESTCASE("Visit items")
+	{
+	DataStore::Compound obj;
+	obj.set("foo", DataStore::String("bar"))
+		.set("key", DataStore::Int32{0})
+		.set("subobj", DataStore::Compound{});
+	
+	obj.visitItems([](auto const item)
+		{
+		printf("%s ",item.first.c_str());
+		});
 	}
 
 

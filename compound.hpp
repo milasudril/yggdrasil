@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <algorithm>
 
 namespace DataStore
 	{
@@ -170,6 +171,9 @@ namespace DataStore
 
 			SourceLocation const& sourceLocation() const noexcept
 				{return *m_src_loc;}
+				
+			template<class Visitor>
+			void visitItems(Visitor&& visitor) const;
 
 		private:
 			std::map<std::string, var_t> m_content;
@@ -189,6 +193,44 @@ namespace DataStore
 		if(ret == nullptr)
 			{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
 		return *ret;
+		}
+		
+	namespace detail
+		{
+		template<class Visitor>
+		class VariantToValue
+			{
+			public:
+				VariantToValue(Visitor& visitor) : r_visitor(visitor) {}
+				
+				template<class T>
+				void operator()(T const& val)
+					{r_visitor(std::pair<std::string const&, T const&>{*r_key, val});}
+					
+				template<class T>
+				void operator()(std::unique_ptr<T> const& val)
+					{r_visitor(std::pair<std::string const&, T const&>{*r_key, *val});}
+				
+				void key(std::string const& key) 
+					{r_key = &key;}
+					
+			private:
+				Visitor& r_visitor;
+				std::string const* r_key;
+			};
+		}
+		
+	template<class Visitor>
+	void Compound::visitItems(Visitor&& visitor) const
+		{
+		using std::begin;
+		using std::end;
+		detail::VariantToValue visitorWrapper{visitor};
+		std::for_each(begin(m_content), end(m_content),[&visitorWrapper](auto&& item)
+			{
+			visitorWrapper.key(item.first);
+			std::visit(visitorWrapper, item.second);
+			});
 		}
 	};
 
