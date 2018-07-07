@@ -76,13 +76,21 @@ namespace DataStore
 				{}
 
 			template<class KeyType, class Type>
-			Compound& set(KeyType&& key, Type&& value)
+			Compound& set(KeyType&& key, Type&& value) &
 				{
 				m_content.insert_or_assign(std::forward<KeyType>(key)
 					,make_var<var_t>(std::forward<Type>(value)));
 				return *this;
 				}
-
+				
+			template<class KeyType, class Type>
+			Compound&& set(KeyType&& key, Type&& value) &&
+				{
+				m_content.insert_or_assign(std::forward<KeyType>(key)
+					,make_var<var_t>(std::forward<Type>(value)));
+				return std::move(*this);
+				}
+				
 			template<class KeyType, class Type>
 			bool insert(KeyType&& key, Type&& value)
 				{
@@ -218,6 +226,34 @@ namespace DataStore
 				Visitor& r_visitor;
 				std::string const* r_key;
 			};
+			
+		template<class Visitor>
+		class VariantToValueRecursive
+			{
+			public:
+				VariantToValueRecursive(Visitor& visitor) : r_visitor(visitor) {}
+				
+				template<class T>
+				void operator()(T const& val)
+					{r_visitor(std::pair<std::string const&, T const&>{*r_key, val});}
+					
+				template<class T>
+				void operator()(std::unique_ptr<T> const& val)
+					{r_visitor(std::pair<std::string const&, T const&>{*r_key, *val});}
+				
+				void operator()(std::unique_ptr<Compound> const& val)
+					{
+					r_visitor(std::pair<std::string const&, Compound const&>{*r_key, *val});
+					val->visitItems(r_visitor);
+					}
+				
+				void key(std::string const& key) 
+					{r_key = &key;}
+					
+			private:
+				Visitor& r_visitor;
+				std::string const* r_key;
+			};
 		}
 		
 	template<class Visitor>
@@ -225,13 +261,15 @@ namespace DataStore
 		{
 		using std::begin;
 		using std::end;
-		detail::VariantToValue visitorWrapper{visitor};
+		detail::VariantToValueRecursive visitorWrapper{visitor};
 		std::for_each(begin(m_content), end(m_content),[&visitorWrapper](auto&& item)
 			{
 			visitorWrapper.key(item.first);
 			std::visit(visitorWrapper, item.second);
 			});
 		}
+
+	
 	};
 
 #endif

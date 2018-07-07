@@ -95,7 +95,7 @@ STIC_TESTCASE("Visit items")
 	DataStore::Compound obj;
 	obj.set("foo", DataStore::String("bar"))
 		.set("key", DataStore::Int32{0})
-		.set("subobj", DataStore::Compound{});
+		.set("subobj", DataStore::Compound{}.set("value", DataStore::Int32{34}));
 	
 	obj.visitItems([](auto const item)
 		{
