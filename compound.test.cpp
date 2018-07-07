@@ -84,25 +84,96 @@ void findMe(DataStore::Compound const&)
 {}
 
 void findMe(DataStore::Int32)
-{printf("Omg\n");}
+{}
 
 template<class T>
 void findMe(T const&)
 {}
 
+class VisitItems
+	{
+	public:
+		explicit VisitItems(std::vector<std::string>&& keys_expected) : m_keys_expected{std::move(keys_expected)}
+			{m_position = m_keys_expected.begin();}
+		
+		template<class T>
+		void visit(T const& item)
+			{
+			STIC_ASSERT(m_position != m_keys_expected.end());
+			STIC_ASSERT(item.first == *m_position);
+			findMe(item.second);
+			++m_position;
+			}
+	private:
+		std::vector<std::string> m_keys_expected;
+		std::vector<std::string>::const_iterator m_position;
+	};
+
 STIC_TESTCASE("Visit items")
+	{
+	std::vector<std::string> keys_expected{"foo", "key", "subobj"};
+		
+	DataStore::Compound obj;
+	obj.set(keys_expected[0], DataStore::String("bar"))
+		.set(keys_expected[1], DataStore::Int32{0})
+		.set(keys_expected[2], DataStore::Compound{}.set("value", DataStore::Int32{34}));
+	
+ 	obj.visitItems<DataStore::ItemVisitor>(VisitItems{std::move(keys_expected)});
+	}
+	
+
+	
+class VisitItemsRecursive
+	{
+	public:
+		explicit VisitItemsRecursive(std::vector<std::string>&& keys_expected) : m_keys_expected{std::move(keys_expected)}
+			{m_position = m_keys_expected.begin();}
+		
+		template<class T>
+		void visit(T const& item)
+			{
+			STIC_ASSERT(m_position != m_keys_expected.end());
+			STIC_ASSERT(item.first == *m_position);
+			++m_position;
+			}
+			
+		void compoundBegin(std::pair<std::string const&, DataStore::Compound const&> item)
+			{
+			STIC_ASSERT(m_position != m_keys_expected.end());
+			STIC_ASSERT(item.first == *m_position);
+			++m_position;
+			}
+		
+		void compoundEnd(std::pair<std::string const&, DataStore::Compound const&> item)
+			{}
+		
+	private:
+		std::vector<std::string> m_keys_expected;
+		std::vector<std::string>::const_iterator m_position;
+	};
+
+STIC_TESTCASE("Visit items")
+	{
+	std::vector<std::string> keys_expected{"foo", "key", "subobj", "value"};
+		
+	DataStore::Compound obj;
+	obj.set(keys_expected[0], DataStore::String("bar"))
+		.set(keys_expected[1], DataStore::Int32{0})
+		.set(keys_expected[2], DataStore::Compound{}.set(keys_expected[3], DataStore::Int32{34}));
+	
+ 	obj.visitItems<DataStore::RecursiveItemVisitor>(VisitItemsRecursive{std::move(keys_expected)});
+	}
+
+	/*
+STIC_TESTCASE("Visit items recursive")
 	{
 	DataStore::Compound obj;
 	obj.set("foo", DataStore::String("bar"))
 		.set("key", DataStore::Int32{0})
 		.set("subobj", DataStore::Compound{}.set("value", DataStore::Int32{34}));
 	
-	obj.visitItems([](auto const item)
-		{
-		printf("%s %s\n", item.first.c_str(), DataStore::getTypeName<std::decay_t<decltype(item.second)>>());
-		findMe(item.second);
-		});
-	}
+ 	obj.visitItems<DataStore::ItemVisitor>(VisitItems{});
+	}*/
 
 
 #if 0

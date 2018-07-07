@@ -159,28 +159,16 @@ namespace DataStore
 			void remove(const std::string& key)
 				{m_content.erase(key);}
 
-			auto begin() const
-				{return m_content.begin();}
-
-			auto end() const
-				{return m_content.end();}
-
-			auto begin()
-				{return m_content.begin();}
-
-			auto end()
-				{return m_content.end();}
-
-			auto size() const
-				{return m_content.size();}
-
 			bool empty() const
 				{return size()==0;}
+				
+			size_t size() const 
+				{return m_content.size();}
 
 			SourceLocation const& sourceLocation() const noexcept
 				{return *m_src_loc;}
 				
-			template<class Visitor>
+			template<template<class> class VisitorPolicy, class Visitor>
 			void visitItems(Visitor&& visitor) const;
 
 		private:
@@ -203,65 +191,63 @@ namespace DataStore
 		return *ret;
 		}
 		
-	namespace detail
+	template<class Visitor>
+	class ItemVisitor
 		{
-		template<class Visitor>
-		class VariantToValue
-			{
-			public:
-				VariantToValue(Visitor& visitor) : r_visitor(visitor) {}
-				
-				template<class T>
-				void operator()(T const& val)
-					{r_visitor(std::pair<std::string const&, T const&>{*r_key, val});}
-					
-				template<class T>
-				void operator()(std::unique_ptr<T> const& val)
-					{r_visitor(std::pair<std::string const&, T const&>{*r_key, *val});}
-				
-				void key(std::string const& key) 
-					{r_key = &key;}
-					
-			private:
-				Visitor& r_visitor;
-				std::string const* r_key;
-			};
+		public:
+			ItemVisitor(Visitor& visitor) : r_visitor(visitor) {}
 			
-		template<class Visitor>
-		class VariantToValueRecursive
-			{
-			public:
-				VariantToValueRecursive(Visitor& visitor) : r_visitor(visitor) {}
+			template<class T>
+			void operator()(T const& val)
+				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, val});}
 				
-				template<class T>
-				void operator()(T const& val)
-					{r_visitor(std::pair<std::string const&, T const&>{*r_key, val});}
-					
-				template<class T>
-				void operator()(std::unique_ptr<T> const& val)
-					{r_visitor(std::pair<std::string const&, T const&>{*r_key, *val});}
+			template<class T>
+			void operator()(std::unique_ptr<T> const& val)
+				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, *val});}
+			
+			void key(std::string const& key) 
+				{r_key = &key;}
 				
-				void operator()(std::unique_ptr<Compound> const& val)
-					{
-					r_visitor(std::pair<std::string const&, Compound const&>{*r_key, *val});
-					val->visitItems(r_visitor);
-					}
-				
-				void key(std::string const& key) 
-					{r_key = &key;}
-					
-			private:
-				Visitor& r_visitor;
-				std::string const* r_key;
-			};
-		}
+		private:
+			Visitor& r_visitor;
+			std::string const* r_key;
+		};
 		
 	template<class Visitor>
+	class RecursiveItemVisitor
+		{
+		public:
+			RecursiveItemVisitor(Visitor& visitor) : r_visitor(visitor) {}
+			
+			template<class T>
+			void operator()(T const& val)
+				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, val});}
+				
+			template<class T>
+			void operator()(std::unique_ptr<T> const& val)
+				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, *val});}
+			
+			void operator()(std::unique_ptr<Compound> const& val)
+				{
+				r_visitor.compoundBegin(std::pair<std::string const&, Compound const&>{*r_key, *val});
+				val->visitItems<RecursiveItemVisitor>(r_visitor);
+				r_visitor.compoundEnd(std::pair<std::string const&, Compound const&>{*r_key, *val});
+				}
+			
+			void key(std::string const& key) 
+				{r_key = &key;}
+				
+		private:
+			Visitor& r_visitor;
+			std::string const* r_key;
+		};
+		
+	template<template<class> class VisitorPolicy, class Visitor>
 	void Compound::visitItems(Visitor&& visitor) const
 		{
 		using std::begin;
 		using std::end;
-		detail::VariantToValueRecursive visitorWrapper{visitor};
+		VisitorPolicy<Visitor> visitorWrapper{visitor};
 		std::for_each(begin(m_content), end(m_content),[&visitorWrapper](auto&& item)
 			{
 			visitorWrapper.key(item.first);
