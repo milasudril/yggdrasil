@@ -121,6 +121,8 @@ STIC_TESTCASE("Visit items")
  	obj.visitItems<DataStore::ItemVisitor>(VisitItems{std::move(keys_expected)});
 	}
 	
+
+	
 class VisitItemsRecursive
 	{
 	public:
@@ -128,12 +130,20 @@ class VisitItemsRecursive
 			{m_position = m_keys_expected.begin();}
 		
 		template<class T>
-		void visit(T const& item)
+		void visit(T item)
 			{
 			STIC_ASSERT(m_position != m_keys_expected.end());
 			STIC_ASSERT(item.first == *m_position);
 			++m_position;
 			}
+
+		void visit(std::pair<std::string const&, std::string const&> item)
+			{
+			STIC_ASSERT(m_position != m_keys_expected.end());
+			STIC_ASSERT(item.first == *m_position);
+			++m_position;
+			}
+			
 			
 		void compoundBegin(std::pair<std::string const&, DataStore::Compound const&> item)
 			{
@@ -160,8 +170,8 @@ STIC_TESTCASE("Visit items recursive")
 		.set(keys_expected[1], DataStore::Int32{0})
 		.set(keys_expected[2], DataStore::Compound{}
 			.set(keys_expected[3], DataStore::Int32{34})
-			.set(keys_expected[4], DataStore::Int16{14}))
-		.set(keys_expected[5], DataStore::String("val"));
+			.set(keys_expected[4], DataStore::Int32{14}))
+		.set(keys_expected[5], DataStore::Array<DataStore::Int32>{1, 2, 3});
 	
  	obj.visitItems<DataStore::RecursiveItemVisitor>(VisitItemsRecursive{std::move(keys_expected)});	
 	}

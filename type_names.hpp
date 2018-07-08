@@ -5,27 +5,28 @@
 
 #include <cstring>
 #include <array>
+#include <type_traits>
 
 namespace DataStore
 	{		
 	template<class T>
-	constexpr decltype(T::typeName()) getTypeName() noexcept
-		{return T::typeName();}
+	constexpr decltype(std::decay_t<T>::typeName()) getTypeName() noexcept
+		{return std::decay_t<T>::typeName();}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, std::string>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, std::string>, char const*> getTypeName() noexcept
 		{return "str";}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<std::string>>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, std::unique_ptr<std::string>>, char const*> getTypeName() noexcept
 		{return getTypeName<std::string>();}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, float>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, float>, char const*> getTypeName() noexcept
 		{return "f20";}
 
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, double>, char const*> getTypeName() noexcept
+	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, double>, char const*> getTypeName() noexcept
 		{return "f40";}
 
 	namespace detail
@@ -75,9 +76,9 @@ namespace DataStore
 		};
 
 	template<class T>
-	constexpr decltype(getTypeName<typename T::value_type>()) getTypeName() noexcept
+	constexpr decltype(getTypeName<typename std::decay_t<T>::value_type>()) getTypeName() noexcept
 		{
-		using Type = typename T::value_type;
+		using Type = typename std::decay_t<T>::value_type;
 		return ArrayTypeName<Type>::typeName();
 		}
 	}
