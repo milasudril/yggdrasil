@@ -296,8 +296,6 @@ namespace DataStore
 		using std::end;
 		VisitorPolicy<decltype(begin(m_content)), Visitor>{begin(m_content), end(m_content), visitor}.visitItems();
 		}
-
-	
 	};
 
 #endif
