@@ -15,6 +15,7 @@
 #include <memory>
 #include <algorithm>
 #include <stack>
+#include <string_view>
 
 namespace DataStore
 	{
@@ -102,7 +103,7 @@ namespace DataStore
 
 
 
-			var_t const* find(std::string const& key) const noexcept
+			var_t const* find(std::string_view key) const noexcept
 				{
 				auto i = m_content.find(key);
 				if(i == m_content.end())
@@ -110,10 +111,10 @@ namespace DataStore
 				return &i->second;
 				}
 
-			var_t* find(std::string const& key) noexcept
+			var_t* find(std::string_view key) noexcept
 				{return const_cast<var_t*>(const_cast<Compound const*>(this)->find(key));}
 
-			auto typeOfValue(std::string const& key) const noexcept
+			auto typeOfValue(std::string_view key) const noexcept
 				{
 				auto val = find(key);
 				if(val == nullptr)
@@ -121,22 +122,22 @@ namespace DataStore
 				return val->index();
 				}
 
-			var_t const& get(std::string const& key) const
+			var_t const& get(std::string_view key) const
 				{
 				auto val = find(key);
 				if(val == nullptr)
-					{throw KeyNotFoundException(key, sourceLocation());}
+					{throw KeyNotFoundException(std::string{key}, sourceLocation());}
 				return *val;
 				}
 
-			var_t& get(std::string const& key)
+			var_t& get(std::string_view key)
 				{return const_cast<var_t&>(const_cast<Compound const*>(this)->get(key));}
 
 
 
 
 			template<class Type>
-			Type const* getIf(std::string const& key) const noexcept
+			Type const* getIf(std::string_view key) const noexcept
 				{
 				auto val = find(key);
 				if(val == nullptr)
@@ -145,14 +146,14 @@ namespace DataStore
 				}
 
 			template<class Type>
-			Type* getIf(std::string const& key) noexcept
+			Type* getIf(std::string_view key) noexcept
 				{return const_cast<Type*>(const_cast<Compound const*>(this)->getIf<Type>(key));}
 
 			template<class Type>
-			inline Type const& get(std::string const& key) const;
+			inline Type const& get(std::string_view key) const;
 
 			template<class Type>
-			Type& get(std::string const& key)
+			Type& get(std::string_view key)
 				{return const_cast<Type&>(const_cast<Compound const*>(this)->get<Type>(key));}
 
 
@@ -183,7 +184,7 @@ namespace DataStore
 			
 			
 		private:
-			std::map<std::string, var_t> m_content;
+			std::map<std::string, var_t, std::less<>> m_content;
 			std::unique_ptr<SourceLocation> m_src_loc;
 		};
 
@@ -193,12 +194,12 @@ namespace DataStore
 		
 
 	template<class Type>
-	inline Type const& Compound::get(std::string const& key) const
+	inline Type const& Compound::get(std::string_view key) const
 		{
 		auto& val = get(key);
 		auto ret = DataStore::get_if<Type>(&val);
 		if(ret == nullptr)
-			{throw TypeMismatchException(key, getTypeName<Type>(), sourceLocation());}
+			{throw TypeMismatchException(std::string{key}, getTypeName<Type>(), sourceLocation());}
 		return *ret;
 		}
 		
