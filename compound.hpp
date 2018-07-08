@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <algorithm>
+#include <stack>
 
 namespace DataStore
 	{
@@ -168,9 +169,19 @@ namespace DataStore
 			SourceLocation const& sourceLocation() const noexcept
 				{return *m_src_loc;}
 				
-			template<template<class> class VisitorPolicy, class Visitor>
+				
+				
+			template<template<class, class> class VisitorPolicy, class Visitor>
 			void visitItems(Visitor&& visitor) const;
-
+			
+			auto begin() const
+				{return m_content.begin();}
+				
+			auto end() const
+				{return m_content.end();}
+			
+			
+			
 		private:
 			std::map<std::string, var_t> m_content;
 			std::unique_ptr<SourceLocation> m_src_loc;
@@ -191,11 +202,12 @@ namespace DataStore
 		return *ret;
 		}
 		
-	template<class Visitor>
+	template<class InputIterator, class Visitor>
 	class ItemVisitor
 		{
 		public:
-			ItemVisitor(Visitor& visitor) : r_visitor(visitor) {}
+			ItemVisitor(InputIterator begin, InputIterator end, Visitor& visitor) : 
+				m_begin(begin), m_end(end), r_visitor(visitor) {}
 			
 			template<class T>
 			void operator()(T const& val)
@@ -205,19 +217,31 @@ namespace DataStore
 			void operator()(std::unique_ptr<T> const& val)
 				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, *val});}
 			
-			void key(std::string const& key) 
-				{r_key = &key;}
+			void visitItems()
+				{
+				std::for_each(m_begin, m_end, [this](auto&& item)
+					{
+					r_key = &item.first;
+					std::visit(*this, item.second);
+					});
+				}
 				
 		private:
-			Visitor& r_visitor;
+			InputIterator m_begin;
+			InputIterator m_end;
 			std::string const* r_key;
+			Visitor& r_visitor;
 		};
 		
-	template<class Visitor>
+	template<class InputIterator, class Visitor>
 	class RecursiveItemVisitor
 		{
 		public:
-			RecursiveItemVisitor(Visitor& visitor) : r_visitor(visitor) {}
+			RecursiveItemVisitor(InputIterator begin, InputIterator end, Visitor& visitor) : 
+				r_visitor(visitor)
+				{
+				m_contexts.push(Context{begin, end});
+				}
 			
 			template<class T>
 			void operator()(T const& val)
@@ -230,29 +254,46 @@ namespace DataStore
 			void operator()(std::unique_ptr<Compound> const& val)
 				{
 				r_visitor.compoundBegin(std::pair<std::string const&, Compound const&>{*r_key, *val});
-				val->visitItems<RecursiveItemVisitor>(r_visitor);
-				r_visitor.compoundEnd(std::pair<std::string const&, Compound const&>{*r_key, *val});
+				m_contexts.push(Context{val->begin(), val->end()});
 				}
-			
-			void key(std::string const& key) 
-				{r_key = &key;}
+
+			void visitItems()
+				{
+				while(!m_contexts.empty())
+					{
+					auto& context = m_contexts.top();
+					if(context.begin == context.end)
+						{
+						m_contexts.pop();
+						if(!m_contexts.empty())
+							{r_visitor.compoundEnd();}
+						}
+					else
+						{
+						r_key = &context.begin->first;
+						std::visit(*this, context.begin->second);
+						++context.begin;
+						}
+					}
+				}
 				
 		private:
-			Visitor& r_visitor;
+			struct Context
+				{
+				InputIterator begin;
+				InputIterator end;
+				};
 			std::string const* r_key;
+			Visitor& r_visitor;
+			std::stack<Context> m_contexts;
 		};
 		
-	template<template<class> class VisitorPolicy, class Visitor>
+	template<template<class, class> class VisitorPolicy, class Visitor>
 	void Compound::visitItems(Visitor&& visitor) const
-		{
+		{			
 		using std::begin;
 		using std::end;
-		VisitorPolicy<Visitor> visitorWrapper{visitor};
-		std::for_each(begin(m_content), end(m_content),[&visitorWrapper](auto&& item)
-			{
-			visitorWrapper.key(item.first);
-			std::visit(visitorWrapper, item.second);
-			});
+		VisitorPolicy<decltype(begin(m_content)), Visitor>{begin(m_content), end(m_content), visitor}.visitItems();
 		}
 
 	
