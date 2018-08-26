@@ -4,3 +4,6 @@
 [submodule "stic"]
 	path = stic
 	url = https://github.com/milasudril/stic
+[submodule "analib"]
+	path = analib
+	url = https://github.com/milasudril/analib
