@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <cassert>
 #include <string>
+#include <algorithm>
 
 namespace DataStore
 	{
@@ -99,6 +100,10 @@ namespace DataStore
 			Compound& insert(key_type&& key, T&& value)
 				{return insert_impl(std::move(key), std::forward<T>(value));}
 
+			template<class T>
+			Compound& insert(key_type const& key, T&& value)
+				{return insert(key_type{key}, std::forward<T>(value));}
+
 			Compound& insert(key_type&& key, Compound&& other)
 				{
 				auto depth_other = other.depth();
@@ -111,15 +116,23 @@ namespace DataStore
 			template<class T>
 			Compound& insertOrReplace(key_type&& key, T&& value)
 				{
+				// FIXME: Add overload for compound
 				m_content.insert_or_assign(std::move(key), ValueWrapper<T>{std::forward<T>(value)});
 				return *this;
 				}
+
+			template<class T>
+			Compound& insertOrReplace(key_type const& key, T&& value)
+				{return insertOrReplace(key_type{key}, std::forward<T>(value));}
 
 			size_t childCount() const
 				{return m_content.size();}
 
 			size_t depth() const
 				{return m_depth;}
+
+			template<class NodeVisitor>
+			void process(NodeVisitor&& visitor) const;
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
@@ -155,7 +168,8 @@ namespace DataStore
 		auto i = m_content.find(key);
 		if(i == m_content.end())
 			{
-			m_content.insert(std::make_pair(std::move(key), ValueWrapper<T>{std::forward<T>(value)}));
+			using PlainT = std::remove_reference_t<T>;
+			m_content.insert(std::make_pair(std::move(key), ValueWrapper<PlainT>{std::forward<PlainT>(value)}));
 			return *this;
 			}
 		else
@@ -164,6 +178,14 @@ namespace DataStore
 			assert(false);
 			return *this;
 			}
+		}
+
+	template<class ExceptionPolicy, class... Types>
+	template<class NodeVisitor>
+	void Compound<ExceptionPolicy, Types...>::process(NodeVisitor&& visitor) const
+		{
+		std::for_each(m_content.begin(), m_content.end(), [&visitor](auto const& item)
+			{visitor(item.first, item.second.get());});
 		}
 	}
 
