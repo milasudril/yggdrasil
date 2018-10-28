@@ -105,7 +105,8 @@ namespace DataStore
 			template<class T>
 			Compound& insertOrReplace(key_type&& key, T&& value)
 				{
-				m_content.insert_or_assign(std::move(key), ValueWrapper<T>{std::forward<T>(value)});
+				using PlainT = std::remove_reference_t<T>;
+				m_content.insert_or_assign(std::move(key), ValueWrapper<PlainT>{std::forward<PlainT>(value)});
 				return *this;
 				}
 
@@ -116,8 +117,8 @@ namespace DataStore
 			size_t childCount() const
 				{return m_content.size();}
 
-			template<class NodeVisitor>
-			void process(NodeVisitor&& visitor) const;
+			template<class ItemVisitor>
+			void visitItems(ItemVisitor&& visitor) const;
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
@@ -166,10 +167,15 @@ namespace DataStore
 
 	template<class ExceptionPolicy, class... Types>
 	template<class NodeVisitor>
-	void Compound<ExceptionPolicy, Types...>::process(NodeVisitor&& visitor) const
+	void Compound<ExceptionPolicy, Types...>::visitItems(NodeVisitor&& visitor) const
 		{
 		std::for_each(m_content.begin(), m_content.end(), [&visitor](auto const& item)
-			{visitor(item.first, item.second.get());});
+			{
+			std::visit([&item, &visitor](auto const& val)
+				{
+				visitor(item.first, val.get());
+				}, item.second);
+			});
 		}
 	}
 
