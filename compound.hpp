@@ -3,300 +3,169 @@
 #ifndef DATA_STORE_COMPOUND_HPP
 #define DATA_STORE_COMPOUND_HPP
 
-#include "key_not_found_exception.hpp"
-#include "type_mismatch_exception.hpp"
-#include "make_var.hpp"
-#include "type_names.hpp"
-#include "strint/common_types.hpp"
-
-#include <string>
-#include <vector>
+#include <variant>
 #include <map>
 #include <memory>
-#include <algorithm>
-#include <stack>
-#include <string_view>
+#include <vector>
+#include <type_traits>
+#include <cassert>
+#include <string>
 
 namespace DataStore
 	{
+	template<class T, class Enable=void>
+	class ValueWrapper
+		{
+		public:
+			template<class... Args>
+			ValueWrapper(Args&&... args) : m_value(std::make_unique<T>(std::forward<Args>(args)...))
+				{}
+
+			T& get() {return *m_value;}
+
+			T const& get() const {return *m_value;}
+
+		private:
+			std::unique_ptr<T> m_value;
+		};
+
 	template<class T>
-	using Array = std::vector<T>;
+	class ValueWrapper<T, std::enable_if_t<(sizeof(std::variant<T>) <= 32)> >
+		{
+		public:
+			template<class...Args>
+			ValueWrapper(Args&&... args) : m_value(std::forward<Args>(args)...)
+				{}
 
-	using Int8 = Strint::Int8;
-	using Int16 = Strint::Int16;
-	using Int32 = Strint::Int32;
-	using Int64 = Strint::Int64;
-	using UInt8 = Strint::UInt8;
-	using UInt16 = Strint::UInt16;
-	using UInt32 = Strint::UInt32;
-	using UInt64 = Strint::UInt64;
-	using Float32 = float;
-	using Float64 = double;
-	using String = std::string;
-	
-	class Compound;
+			T get() {return m_value;}
 
-	using var_t = std::variant
-		<
-		 Int8
-		,Int16
-		,Int32
-		,Int64
-		,UInt8
-		,UInt16
-		,UInt32
-		,UInt64
-		,Float32
-		,Float64
-		,std::unique_ptr<String>
-		,std::unique_ptr<Compound>
+			T const& get() const {return m_value;}
 
-		,Array<Int8>
-		,Array<Int16>
-		,Array<Int32>
-		,Array<Int64>
-		,Array<UInt8>
-		,Array<UInt16>
-		,Array<UInt32>
-		,Array<UInt64>
-		,Array<Float32>
-		,Array<Float64>
-		,Array<String>
-		,Array<Compound>
-		>;
+		private:
+			T m_value;
+		};
 
+	template<class ExceptionPolicy, class... Types>
 	class Compound
 		{
 		public:
-			static constexpr auto invalidKey() noexcept
-				{return std::variant_npos;}
+			Compound(): m_depth{0} {}
 
-			static constexpr char const* typeName() noexcept
-				{return "obj";}
+			using mapped_type = std::variant<
+				ValueWrapper<Compound>
+				, ValueWrapper<Types>...
+				, ValueWrapper<std::vector<Compound>>
+				, ValueWrapper<std::vector<Types>>...
+				>;
 
-			Compound() : m_src_loc(std::make_unique<SourceLocation>())
-				{}
+			using key_type = std::string;
 
-			template<class KeyType, class Type>
-			Compound& set(KeyType&& key, Type&& value) &
+
+			template<class T>
+			T& get(std::string_view key)
+				{return const_cast<T&>(const_cast<Compound const*>(this)->get<T>(key));}
+
+			template<class T, class ... Path>
+			T& get(std::string_view head, Path ... path)
 				{
-				m_content.insert_or_assign(std::forward<KeyType>(key)
-					,make_var<var_t>(std::forward<Type>(value)));
+				auto& next = get<Compound>(head);
+				return next.template get<T>(path...);
+				}
+
+
+			template<class T>
+			T const& get(std::string_view key) const;
+
+			template<class T, class ... Path>
+			T const& get(std::string_view head, Path ... path) const
+				{
+				auto const& next = get<Compound>(head);
+				return next.template get<T>(path...);
+				}
+
+
+			bool exists(std::string_view key) const
+				{return m_content.find(key)!=m_content.end();}
+
+			template<class ... Path>
+			bool exists(std::string_view head, Path ... path) const
+				{
+				auto const& next = get<Compound>(head);
+				return next.exists(path...);
+				}
+
+
+			template<class T>
+			Compound& insert(key_type&& key, T&& value)
+				{return insert_impl(std::move(key), std::forward<T>(value));}
+
+			Compound& insert(key_type&& key, Compound&& other)
+				{
+				auto depth_other = other.depth();
+				insert_impl(std::move(key), std::move(other));
+				// Compute tree new depth. We add one to other because its new parent will increase the depth by one.
+				m_depth = std::max(depth_other + 1, m_depth);
 				return *this;
 				}
-				
-			template<class KeyType, class Type>
-			Compound&& set(KeyType&& key, Type&& value) &&
+
+			template<class T>
+			Compound& insertOrReplace(key_type&& key, T&& value)
 				{
-				m_content.insert_or_assign(std::forward<KeyType>(key)
-					,make_var<var_t>(std::forward<Type>(value)));
-				return std::move(*this);
-				}
-				
-			template<class KeyType, class Type>
-			bool insert(KeyType&& key, Type&& value)
-				{
-				auto ip = m_content.insert(std::make_pair(std::forward<KeyType>(key)
-					,make_var<var_t>(std::forward<Type>(value))));
-				return ip.second;
+				m_content.insert_or_assign(std::move(key), ValueWrapper<T>{std::forward<T>(value)});
+				return *this;
 				}
 
-
-
-			var_t const* find(std::string_view key) const noexcept
-				{
-				auto i = m_content.find(key);
-				if(i == m_content.end())
-					{return nullptr;}
-				return &i->second;
-				}
-
-			var_t* find(std::string_view key) noexcept
-				{return const_cast<var_t*>(const_cast<Compound const*>(this)->find(key));}
-
-			auto typeOfValue(std::string_view key) const noexcept
-				{
-				auto val = find(key);
-				if(val == nullptr)
-					{return std::variant_npos;}
-				return val->index();
-				}
-
-			var_t const& get(std::string_view key) const
-				{
-				auto val = find(key);
-				if(val == nullptr)
-					{throw KeyNotFoundException(std::string{key}, sourceLocation());}
-				return *val;
-				}
-
-			var_t& get(std::string_view key)
-				{return const_cast<var_t&>(const_cast<Compound const*>(this)->get(key));}
-
-
-
-
-			template<class Type>
-			Type const* getIf(std::string_view key) const noexcept
-				{
-				auto val = find(key);
-				if(val == nullptr)
-					{return nullptr;}
-				return DataStore::get_if<Type>(val);
-				}
-
-			template<class Type>
-			Type* getIf(std::string_view key) noexcept
-				{return const_cast<Type*>(const_cast<Compound const*>(this)->getIf<Type>(key));}
-
-			template<class Type>
-			inline Type const& get(std::string_view key) const;
-
-			template<class Type>
-			Type& get(std::string_view key)
-				{return const_cast<Type&>(const_cast<Compound const*>(this)->get<Type>(key));}
-
-
-
-			void remove(const std::string& key)
-				{m_content.erase(key);}
-
-			bool empty() const
-				{return size()==0;}
-				
-			size_t size() const 
+			size_t childCount() const
 				{return m_content.size();}
 
-			SourceLocation const& sourceLocation() const noexcept
-				{return *m_src_loc;}
-				
-				
-				
-			template<template<class, class> class VisitorPolicy, class Visitor>
-			void visitItems(Visitor&& visitor) const;
-			
-			auto begin() const
-				{return m_content.begin();}
-				
-			auto end() const
-				{return m_content.end();}
-			
-			
-			
+			size_t depth() const
+				{return m_depth;}
+
 		private:
-			std::map<std::string, var_t, std::less<>> m_content;
-			std::unique_ptr<SourceLocation> m_src_loc;
+			using MapType = std::map<key_type, mapped_type, std::less<>>;
+			MapType m_content;
+			size_t m_depth;
+
+			template<class T>
+			Compound& insert_impl(key_type&& key, T&& value);
+
 		};
 
+	template<class ExceptionPolicy, class... Types>
 	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<T, std::unique_ptr<Compound>>, char const*> getTypeName() noexcept
-		{return getTypeName<Compound>();}
-		
-
-	template<class Type>
-	inline Type const& Compound::get(std::string_view key) const
+	T const& Compound<ExceptionPolicy, Types...>::get(std::string_view key) const
 		{
-		auto& val = get(key);
-		auto ret = DataStore::get_if<Type>(&val);
-		if(ret == nullptr)
-			{throw TypeMismatchException(std::string{key}, getTypeName<Type>(), sourceLocation());}
-		return *ret;
+		auto i = m_content.find(key);
+		if(i != m_content.end())  // Use this style to trigger warning about noreturn
+			{
+			auto x = std::get_if<ValueWrapper<T>>(&i->second);
+			if( x != nullptr )
+				{return x->get();}
+			else
+				{ExceptionPolicy::template keyValueHasWrongType<T>(key, i->second.index());}
+			}
+		else
+			{ExceptionPolicy::keyNotFound(key);}
 		}
-		
-	template<class InputIterator, class Visitor>
-	class ItemVisitor
-		{
-		public:
-			ItemVisitor(InputIterator begin, InputIterator end, Visitor& visitor) : 
-				m_begin(begin), m_end(end), r_visitor(visitor) {}
-			
-			template<class T>
-			void operator()(T const& val)
-				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, val});}
-				
-			template<class T>
-			void operator()(std::unique_ptr<T> const& val)
-				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, *val});}
-			
-			void visitItems()
-				{
-				std::for_each(m_begin, m_end, [this](auto&& item)
-					{
-					r_key = &item.first;
-					std::visit(*this, item.second);
-					});
-				}
-				
-		private:
-			InputIterator m_begin;
-			InputIterator m_end;
-			std::string const* r_key;
-			Visitor& r_visitor;
-		};
-		
-	template<class InputIterator, class Visitor>
-	class RecursiveItemVisitor
-		{
-		public:
-			RecursiveItemVisitor(InputIterator begin, InputIterator end, Visitor& visitor) : 
-				r_visitor(visitor)
-				{
-				m_contexts.push(Context{begin, end});
-				}
-			
-			template<class T>
-			void operator()(T const& val)
-				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, val});}
-				
-			template<class T>
-			void operator()(std::unique_ptr<T> const& val)
-				{r_visitor.visit(std::pair<std::string const&, T const&>{*r_key, *val});}
-			
-			void operator()(std::unique_ptr<Compound> const& val)
-				{
-				r_visitor.compoundBegin(std::pair<std::string const&, Compound const&>{*r_key, *val});
-				m_contexts.push(Context{val->begin(), val->end()});
-				}
 
-			void visitItems()
-				{
-				while(!m_contexts.empty())
-					{
-					auto& context = m_contexts.top();
-					if(context.begin == context.end)
-						{
-						m_contexts.pop();
-						if(!m_contexts.empty())
-							{r_visitor.compoundEnd();}
-						}
-					else
-						{
-						r_key = &context.begin->first;
-						std::visit(*this, context.begin->second);
-						++context.begin;
-						}
-					}
-				}
-				
-		private:
-			struct Context
-				{
-				InputIterator begin;
-				InputIterator end;
-				};
-			std::string const* r_key;
-			Visitor& r_visitor;
-			std::stack<Context> m_contexts;
-		};
-		
-	template<template<class, class> class VisitorPolicy, class Visitor>
-	void Compound::visitItems(Visitor&& visitor) const
-		{			
-		using std::begin;
-		using std::end;
-		VisitorPolicy<decltype(begin(m_content)), Visitor>{begin(m_content), end(m_content), visitor}.visitItems();
+	template<class ExceptionPolicy, class... Types>
+	template<class T>
+	Compound<ExceptionPolicy, Types...>& Compound<ExceptionPolicy, Types...>::insert_impl(key_type&& key, T&& value)
+		{
+		auto i = m_content.find(key);
+		if(i == m_content.end())
+			{
+			m_content.insert(std::make_pair(std::move(key), ValueWrapper<T>{std::forward<T>(value)}));
+			return *this;
+			}
+		else
+			{
+			std::visit([key](auto const& var) {ExceptionPolicy::keyAlreadyExists(key, var.get());}, i->second);
+			assert(false);
+			return *this;
+			}
 		}
-	};
+	}
 
 #endif
 
