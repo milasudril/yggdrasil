@@ -50,8 +50,6 @@ namespace DataStore
 	class Compound
 		{
 		public:
-			Compound(): m_depth{0} {}
-
 			using mapped_type = std::variant<
 				ValueWrapper<Compound>
 				, ValueWrapper<Types>...
@@ -104,19 +102,9 @@ namespace DataStore
 			Compound& insert(key_type const& key, T&& value)
 				{return insert(key_type{key}, std::forward<T>(value));}
 
-			Compound& insert(key_type&& key, Compound&& other)
-				{
-				auto depth_other = other.depth();
-				insert_impl(std::move(key), std::move(other));
-				// Compute tree new depth. We add one to other because its new parent will increase the depth by one.
-				m_depth = std::max(depth_other + 1, m_depth);
-				return *this;
-				}
-
 			template<class T>
 			Compound& insertOrReplace(key_type&& key, T&& value)
 				{
-				// FIXME: Add overload for compound
 				m_content.insert_or_assign(std::move(key), ValueWrapper<T>{std::forward<T>(value)});
 				return *this;
 				}
@@ -128,16 +116,12 @@ namespace DataStore
 			size_t childCount() const
 				{return m_content.size();}
 
-			size_t depth() const
-				{return m_depth;}
-
 			template<class NodeVisitor>
 			void process(NodeVisitor&& visitor) const;
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
 			MapType m_content;
-			size_t m_depth;
 
 			template<class T>
 			Compound& insert_impl(key_type&& key, T&& value);
