@@ -120,6 +120,21 @@ namespace DataStore
 			template<class ItemVisitor>
 			void visitItems(ItemVisitor&& visitor) const;
 
+			bool erase(std::string_view key)
+				{return m_content.erase(key) != 0;}
+
+
+			template<class ... Path>
+			bool erase(std::string_view head, Path ... path)
+				{
+				auto const& next = get<Compound>(head);
+				return next.erase(path...);
+				}
+
+
+			void clear()
+				{m_content.clear();}
+
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
 			MapType m_content;
