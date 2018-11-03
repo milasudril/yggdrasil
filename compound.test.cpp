@@ -68,8 +68,8 @@ STIC_TESTCASE("erase in subobj")
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
 	STIC_ASSERT(contains(sut, "subobj", "value in subobj"));
-	STIC_ASSERT(sut.erase("subobj", "value in subobj"));
-	STIC_ASSERT(!sut.erase("subobj", "value in subobj"));
+	STIC_ASSERT(erase(sut, "subobj", "value in subobj"));
+	STIC_ASSERT(!erase(sut, "subobj", "value in subobj"));
 	STIC_ASSERT(!contains(sut ,"subobj", "value in subobj"));
 	STIC_ASSERT(n_children_ref == sut.childCount() );
 	}

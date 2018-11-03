@@ -102,15 +102,6 @@ namespace DataStore
 			bool erase(key_type const& key)
 				{return m_content.erase(key) != 0;}
 
-
-			template<class ... Path>
-			bool erase(key_type const& head, Path ... path)
-				{
-				auto& next = get<Compound>(head);
-				return next.erase(path...);
-				}
-
-
 			void clear()
 				{m_content.clear();}
 
@@ -213,6 +204,17 @@ namespace DataStore
 
 		auto const& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
 		return contains(next, path...);
+		}
+
+	template<class ExceptionPolicy, class... Types>
+	bool erase(Compound<ExceptionPolicy, Types...>& compound, std::string_view head)
+		{return compound.contains(head);}
+
+	template<class ExceptionPolicy, class... Types, class ... Path>
+	bool erase(Compound<ExceptionPolicy, Types...>& compound, std::string_view head, Path ... path)
+		{
+		auto& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
+		return erase(next, path...);
 		}
 	}
 
