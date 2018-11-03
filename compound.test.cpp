@@ -80,7 +80,7 @@ STIC_TESTCASE("get")
 	auto const n_children_ref = sut.childCount();
 	STIC_ASSERT(sut.get<int>("key") == 1);
 	STIC_ASSERT(sut.get<std::string>("foo") == "bar");
-	STIC_ASSERT(sut.get<int>("subobj", "value in subobj") == 34);
+	STIC_ASSERT(DataStore::get<int>(sut, "subobj", "value in subobj") == 34);
 	STIC_ASSERT(n_children_ref == sut.childCount());
 	}
 

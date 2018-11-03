@@ -64,23 +64,9 @@ namespace DataStore
 			T& get(std::string_view key)
 				{return const_cast<T&>(const_cast<Compound const*>(this)->get<T>(key));}
 
-			template<class T, class ... Path>
-			T& get(std::string_view head, Path ... path)
-				{
-				auto& next = get<Compound>(head);
-				return next.template get<T>(path...);
-				}
-
 
 			template<class T>
 			T const& get(std::string_view key) const;
-
-			template<class T, class ... Path>
-			T const& get(std::string_view head, Path ... path) const
-				{
-				auto const& next = get<Compound>(head);
-				return next.template get<T>(path...);
-				}
 
 
 			bool exists(std::string_view key) const
@@ -191,6 +177,33 @@ namespace DataStore
 				visitor(item.first, val.get());
 				}, item.second);
 			});
+		}
+
+
+
+
+	template<class T, class ExceptionPolicy, class... Types>
+	T& get(Compound<ExceptionPolicy, Types...>& compound, std::string_view head)
+		{return compound.template get<T>(head);}
+
+
+	template<class T, class ExceptionPolicy, class... Types, class ... Path>
+	T& get(Compound<ExceptionPolicy, Types...>& compound, std::string_view head, Path ... path)
+		{
+		auto& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
+		return get<T>(next, path...);
+		}
+
+	template<class T, class ExceptionPolicy, class... Types>
+	T const& get(Compound<ExceptionPolicy, Types...> const& compound, std::string_view head)
+		{return compound.template get<T>(head);}
+
+
+	template<class T, class ExceptionPolicy, class... Types, class ... Path>
+	T const& get(Compound<ExceptionPolicy, Types...> const& compound, std::string_view head, Path ... path)
+		{
+		auto const& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
+		return get<T>(next, path...);
 		}
 	}
 
