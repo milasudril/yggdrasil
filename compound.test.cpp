@@ -56,10 +56,10 @@ STIC_TESTCASE("erase")
 	{
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
-	STIC_ASSERT(sut.exists("subobj"));
+	STIC_ASSERT(sut.contains("subobj"));
 	STIC_ASSERT(sut.erase("subobj"));
 	STIC_ASSERT(!sut.erase("subobj"));
-	STIC_ASSERT(!sut.exists("subobj"));
+	STIC_ASSERT(!sut.contains("subobj"));
 	STIC_ASSERT(n_children_ref == sut.childCount() + 1);
 	}
 
@@ -67,10 +67,10 @@ STIC_TESTCASE("erase in subobj")
 	{
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
-	STIC_ASSERT(sut.exists("subobj", "value in subobj"));
+	STIC_ASSERT(contains(sut, "subobj", "value in subobj"));
 	STIC_ASSERT(sut.erase("subobj", "value in subobj"));
 	STIC_ASSERT(!sut.erase("subobj", "value in subobj"));
-	STIC_ASSERT(!sut.exists("subobj", "value in subobj"));
+	STIC_ASSERT(!contains(sut ,"subobj", "value in subobj"));
 	STIC_ASSERT(n_children_ref == sut.childCount() );
 	}
 
@@ -88,9 +88,9 @@ STIC_TESTCASE("insert")
 	{
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
-	STIC_ASSERT(!sut.exists("Hello"));
+	STIC_ASSERT(!sut.contains("Hello"));
 	sut.insert("Hello", 123);
-	STIC_ASSERT(sut.exists("Hello"));
+	STIC_ASSERT(sut.contains("Hello"));
 	STIC_ASSERT(sut.get<int>("Hello") == 123);
 	STIC_ASSERT(n_children_ref + 1 == sut.childCount() );
 	}
@@ -99,9 +99,9 @@ STIC_TESTCASE("replace")
 	{
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
-	STIC_ASSERT(sut.exists("subobj"));
+	STIC_ASSERT(sut.contains("subobj"));
 	sut.insertOrReplace("subobj", 123);
-	STIC_ASSERT(sut.exists("subobj"));
+	STIC_ASSERT(sut.contains("subobj"));
 	STIC_ASSERT(sut.get<int>("subobj") == 123);
 	STIC_ASSERT(n_children_ref == sut.childCount() );
 	}

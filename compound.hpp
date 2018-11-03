@@ -69,15 +69,8 @@ namespace DataStore
 			T const& get(std::string_view key) const;
 
 
-			bool exists(std::string_view key) const
+			bool contains(std::string_view key) const
 				{return m_content.find(key) != m_content.end();}
-
-			template<class ... Path>
-			bool exists(std::string_view head, Path ... path) const
-				{
-				auto const& next = get<Compound>(head);
-				return next.exists(path...);
-				}
 
 
 			template<class T>
@@ -204,6 +197,22 @@ namespace DataStore
 		{
 		auto const& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
 		return get<T>(next, path...);
+		}
+
+
+	template<class ExceptionPolicy, class... Types>
+	bool contains(Compound<ExceptionPolicy, Types...> const& compound, std::string_view head)
+		{return compound.contains(head);}
+
+
+	template<class ExceptionPolicy, class... Types, class ... Path>
+	bool contains(Compound<ExceptionPolicy, Types...> const& compound, std::string_view head, Path ... path)
+		{
+		if(!contains(compound, head))
+			{return false;}
+
+		auto const& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
+		return contains(next, path...);
 		}
 	}
 
