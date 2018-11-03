@@ -84,7 +84,7 @@ namespace DataStore
 
 
 			bool exists(std::string_view key) const
-				{return m_content.find(key)!=m_content.end();}
+				{return m_content.find(key) != m_content.end();}
 
 			template<class ... Path>
 			bool exists(std::string_view head, Path ... path) const
@@ -120,14 +120,14 @@ namespace DataStore
 			template<class ItemVisitor>
 			void visitItems(ItemVisitor&& visitor) const;
 
-			bool erase(std::string_view key)
+			bool erase(key_type const& key)
 				{return m_content.erase(key) != 0;}
 
 
 			template<class ... Path>
-			bool erase(std::string_view head, Path ... path)
+			bool erase(key_type const& head, Path ... path)
 				{
-				auto const& next = get<Compound>(head);
+				auto& next = get<Compound>(head);
 				return next.erase(path...);
 				}
 

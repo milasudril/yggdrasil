@@ -8,15 +8,17 @@
 
 struct MyExceptionPolicy
 	{
-	static void keyNotFound(std::string const& key)
-		{throw key;}
+	[[noreturn]]
+	static void keyNotFound(std::string_view key)
+		{throw std::string{key};}
 
 	template<class T>
-	static void keyValueHasWrongType(std::string const& key, size_t actualType)
-		{throw key;}
-
+	[[noreturn]]
+	static void keyValueHasWrongType(std::string_view key, size_t actualType)
+		{throw std::string{key};}
 
 	template<class T>
+	[[noreturn]]
 	static void keyAlreadyExists(std::string const& key, T const& value)
 		{throw key;}
 	};
@@ -48,4 +50,58 @@ STIC_TESTCASE("childCount")
 		});
 
 	STIC_ASSERT(n_children_counted == n_children_ref);
+	}
+
+STIC_TESTCASE("erase")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(sut.exists("subobj"));
+	STIC_ASSERT(sut.erase("subobj"));
+	STIC_ASSERT(!sut.erase("subobj"));
+	STIC_ASSERT(!sut.exists("subobj"));
+	STIC_ASSERT(n_children_ref == sut.childCount() + 1);
+	}
+
+STIC_TESTCASE("erase in subobj")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(sut.exists("subobj", "value in subobj"));
+	STIC_ASSERT(sut.erase("subobj", "value in subobj"));
+	STIC_ASSERT(!sut.erase("subobj", "value in subobj"));
+	STIC_ASSERT(!sut.exists("subobj", "value in subobj"));
+	STIC_ASSERT(n_children_ref == sut.childCount() );
+	}
+
+STIC_TESTCASE("get")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(sut.get<int>("key") == 1);
+	STIC_ASSERT(sut.get<std::string>("foo") == "bar");
+	STIC_ASSERT(sut.get<int>("subobj", "value in subobj") == 34);
+	STIC_ASSERT(n_children_ref == sut.childCount());
+	}
+
+STIC_TESTCASE("insert")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(!sut.exists("Hello"));
+	sut.insert("Hello", 123);
+	STIC_ASSERT(sut.exists("Hello"));
+	STIC_ASSERT(sut.get<int>("Hello") == 123);
+	STIC_ASSERT(n_children_ref + 1 == sut.childCount() );
+	}
+
+STIC_TESTCASE("replace")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(sut.exists("subobj"));
+	sut.insertOrReplace("subobj", 123);
+	STIC_ASSERT(sut.exists("subobj"));
+	STIC_ASSERT(sut.get<int>("subobj") == 123);
+	STIC_ASSERT(n_children_ref == sut.childCount() );
 	}
