@@ -1,6 +1,6 @@
-//@	{"targets":[{"name":"compound.test","type":"application","autorun":1}]}
+//@	{"targets":[{"name":"basic_compound.test","type":"application","autorun":1}]}
 
-#include "compound.hpp"
+#include "basic_compound.hpp"
 
 #include "stic/stic.hpp"
 
@@ -23,7 +23,7 @@ struct MyExceptionPolicy
 		{throw key;}
 	};
 
-using Compound = DataStore::Compound<MyExceptionPolicy, std::string, int>;
+using Compound = DataStore::BasicCompound<MyExceptionPolicy, std::string, int>;
 
 Compound makeSut()
 	{
