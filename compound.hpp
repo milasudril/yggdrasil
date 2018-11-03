@@ -208,7 +208,7 @@ namespace DataStore
 
 	template<class ExceptionPolicy, class... Types>
 	bool erase(Compound<ExceptionPolicy, Types...>& compound, std::string_view head)
-		{return compound.contains(head);}
+		{return compound.erase(typename Compound<ExceptionPolicy, Types...>::key_type{head});}
 
 	template<class ExceptionPolicy, class... Types, class... Path>
 	bool erase(Compound<ExceptionPolicy, Types...>& compound, std::string_view head, Path ... path)
@@ -227,7 +227,17 @@ namespace DataStore
 		auto& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
 		insert(std::forward<T>(value), next, path...);
 		}
+
+	template<class T, class ExceptionPolicy, class... Types>
+	void insertOrReplace(T&& value, Compound<ExceptionPolicy, Types...>& compound, std::string_view head)
+		{compound.template insertOrReplace<T>(typename Compound<ExceptionPolicy, Types...>::key_type{head}, std::forward<T>(value));}
+
+	template<class T, class ExceptionPolicy, class... Types, class... Path>
+	void insertOrReplace(T&& value, Compound<ExceptionPolicy, Types...>& compound, std::string_view head, Path... path)
+		{
+		auto& next = get<Compound<ExceptionPolicy, Types...>>(compound, head);
+		insertOrReplace(std::forward<T>(value), next, path...);
+		}
 	}
 
 #endif
-

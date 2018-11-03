@@ -102,7 +102,11 @@ STIC_TESTCASE("insert in subobj")
 	STIC_ASSERT(sut.contains("subobj"));
 	insert(123, sut, "subobj", "Hello");
 	STIC_ASSERT(contains(sut, "subobj", "Hello"));
+	STIC_ASSERT(DataStore::get<int>(sut, "subobj", "Hello"));
 	STIC_ASSERT(n_children_ref == sut.childCount() );
+
+	insertOrReplace(std::string{"Boo"}, sut, "subobj", "Hello");
+	STIC_ASSERT(DataStore::get<std::string>(sut, "subobj", "Hello") == "Boo");
 	}
 
 STIC_TESTCASE("replace")
