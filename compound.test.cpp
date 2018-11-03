@@ -95,6 +95,16 @@ STIC_TESTCASE("insert")
 	STIC_ASSERT(n_children_ref + 1 == sut.childCount() );
 	}
 
+STIC_TESTCASE("insert in subobj")
+	{
+	auto sut = makeSut();
+	auto const n_children_ref = sut.childCount();
+	STIC_ASSERT(sut.contains("subobj"));
+	insert(123, sut, "subobj", "Hello");
+	STIC_ASSERT(contains(sut, "subobj", "Hello"));
+	STIC_ASSERT(n_children_ref == sut.childCount() );
+	}
+
 STIC_TESTCASE("replace")
 	{
 	auto sut = makeSut();
