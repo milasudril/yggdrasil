@@ -17,6 +17,8 @@ struct MyExceptionPolicy
 	[[noreturn]]
 	static void keyAlreadyExists(std::string const& key, T const& value)
 		{throw key;}
+
+	using key_type = std::string;
 	};
 
 int main()

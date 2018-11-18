@@ -1,4 +1,5 @@
 //@	{"targets":[{"name":"compound.hpp","type":"include"}]}
+
 #ifndef YGGDRASIL_COMPOUND_HPP
 #define YGGDRASIL_COMPOUND_HPP
 

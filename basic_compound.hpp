@@ -62,7 +62,7 @@ namespace DataStore
 				, ValueWrapper<std::vector<Types>>...
 				>;
 
-			using key_type = std::string;
+			using key_type = typename ExceptionPolicy::key_type; //::string;
 
 
 			template<class T>
