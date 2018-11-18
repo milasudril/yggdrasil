@@ -13,20 +13,28 @@ namespace Yggdrasil
 
 	using String = Analib::StringNoSso;
 
+
 	template<class ExceptionPolicy>
 	using Compound = DataStore::BasicCompound
 		<
 		 ExceptionPolicy
+
+		// Basic intger types
 		,int8_t
 		,uint8_t
 		,int16_t
 		,uint16_t
 		,int32_t
 		,uint32_t
-		,float
 		,int64_t
 		,uint64_t
+
+		// Floats
+		//TODO (maybe decode will unpack to float: ,half
+		,float
 		,double
+
+
 		,vec4_t<int32_t>
 		,vec4_t<uint32_t>
 		,vec4_t<float>
@@ -34,91 +42,56 @@ namespace Yggdrasil
 		,String
 		>;
 
-	template<class T> struct ValueTag{};
-
-	constexpr const char* getTypeName(ValueTag<int8_t>)
-		{return "i08v";}
-	constexpr const char* getTypeName(ValueTag<uint8_t>)
-		{return "u08v";}
-
-	constexpr const char* getTypeName(ValueTag<int16_t>)
-		{return "i10v";}
-	constexpr const char* getTypeName(ValueTag<uint16_t>)
-		{return "u10v";}
-
-	constexpr const char* getTypeName(ValueTag<int32_t>)
-		{return "i20v";}
-	constexpr const char* getTypeName(ValueTag<uint32_t>)
-		{return "u20v";}
-
-	constexpr const char* getTypeName(ValueTag<int64_t>)
-		{return "i40v";}
-	constexpr const char* getTypeName(ValueTag<uint64_t>)
-		{return "u40v";}
-
-	constexpr const char* getTypeName(ValueTag<float>)
-		{return "f20v";}
-	constexpr const char* getTypeName(ValueTag<double>)
-		{return "f40v";}
-
-	constexpr const char* getTypeName(ValueTag<vec4_t<int32_t>>)
-		{return "I20v";}
-	constexpr const char* getTypeName(ValueTag<vec4_t<uint32_t>>)
-		{return "U20v";}
-	constexpr const char* getTypeName(ValueTag<vec4_t<float>>)
-		{return "F20v";}
-
-	constexpr const char* getTypeName(ValueTag<String>)
-		{return "strv";}
-
-	template<class ExceptionPolicy>
-	constexpr const char* getTypeName(ValueTag<Compound<ExceptionPolicy>>)
-		{return "objv";}
-
-
-	template<class T> struct ArrayTag
+	enum class TypeId : intptr_t
 		{
-		using tag = ValueTag<std::vector<T>>;
+		 Unkonwn
+
+		// Basic integer types
+		,Int8
+		,Uint8
+		,Int16
+		,Uint16
+		,Int32
+		,Uint32
+		,Int64
+		,Uint64
+
+		// Floats
+		// TODO:, Float16
+		,Float32
+		,Float64
+
+		// Vector types
+		,VecInt32
+		,VecUint32
+		,VecFloat32
+
+		// Other
+		, String
+		, Compound
+
+
+		// The same list for arrays
+		,ArrayInt8
+		,ArrayUint8
+		,ArrayInt16
+		,ArrayUint16
+		,ArrayInt32
+		,ArrayUint32
+		,ArrayInt64
+		,ArrayUint64
+
+		// TODO:, Float16
+		,ArrayFloat32
+		,ArrayFloat64
+
+		,ArrayVecInt32
+		,ArrayVecUint32
+		,ArrayVecFloat32
+
+		,ArrayString
+		,ArrayCompound
 		};
-
-	constexpr const char* getTypeName(ValueTag<std::vector<int8_t>>)
-		{return "i08a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<uint8_t>>)
-		{return "u08a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<int16_t>>)
-		{return "i10a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<uint16_t>>)
-		{return "u10a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<int32_t>>)
-		{return "i20a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<uint32_t>>)
-		{return "u20a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<int64_t>>)
-		{return "i40a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<uint64_t>>)
-		{return "u40a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<float>>)
-		{return "f20a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<double>>)
-		{return "f40a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<vec4_t<int32_t>>>)
-		{return "I20a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<vec4_t<uint32_t>>>)
-		{return "U20a";}
-	constexpr const char* getTypeName(ValueTag<std::vector<vec4_t<float>>>)
-		{return "F20a";}
-
-	constexpr const char* getTypeName(ValueTag<std::vector<String>>)
-		{return "stra";}
-
-	template<class ExceptionPolicy>
-	constexpr const char* getTypeName(ValueTag<std::vector<Compound<ExceptionPolicy>>>)
-		{return "obja";}
 	}
 
 #endif
