@@ -6,23 +6,24 @@ struct MyExceptionPolicy
 	{
 	[[noreturn]]
 	static void keyNotFound(std::string_view key)
-		{throw std::string{key};}
+		{throw std::string(key);}
 
 	template<class T>
 	[[noreturn]]
 	static void keyValueHasWrongType(std::string_view key, size_t actualType)
-		{throw std::string{key};}
+		{throw std::string(key);}
 
 	template<class T>
 	[[noreturn]]
-	static void keyAlreadyExists(std::string const& key, T const& value)
+	static void keyAlreadyExists(Yggdrasil::KeyType const& key, T const& value)
 		{throw key;}
-
-	using key_type = std::string;
 	};
 
 int main()
 	{
 	Yggdrasil::Compound<MyExceptionPolicy> test;
+
+	test.insert(Yggdrasil::KeyType("Foobar"), Yggdrasil::String("Hello"));
+
 	return 0;
 	}

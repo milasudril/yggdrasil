@@ -65,16 +65,17 @@ namespace DataStore
 			using key_type = KeyType;
 
 
-			template<class T>
-			T& get(std::string_view key)
+			template<class T, class KeyLike>
+			T& get(KeyLike const& key)
 				{return const_cast<T&>(const_cast<BasicCompound const*>(this)->get<T>(key));}
 
 
-			template<class T>
-			T const& get(std::string_view key) const;
+			template<class T, class KeyLike>
+			T const& get(KeyLike const& key) const;
 
 
-			bool contains(std::string_view key) const
+			template<class KeyLike>
+			bool contains(KeyLike const& key) const
 				{return m_content.find(key) != m_content.end();}
 
 
@@ -104,7 +105,8 @@ namespace DataStore
 			template<class ItemVisitor>
 			void visitItems(ItemVisitor&& visitor) const;
 
-			bool erase(key_type const& key)
+			template<class KeyLike>
+			bool erase(KeyLike const& key)
 				{return m_content.erase(key) != 0;}
 
 			void clear()
@@ -120,8 +122,8 @@ namespace DataStore
 		};
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
-	template<class T>
-	T const& BasicCompound<ExceptionPolicy, KeyType, Types...>::get(std::string_view key) const
+	template<class T, class KeyLike>
+	T const& BasicCompound<ExceptionPolicy, KeyType, Types...>::get(KeyLike const& key) const
 		{
 		auto i = m_content.find(key);
 		if(i != m_content.end())  // Use this style to trigger warning about noreturn
@@ -168,37 +170,37 @@ namespace DataStore
 			});
 		}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types>
-	T& get(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
+	T& get(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{return compound.template get<T>(head);}
 
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types, class ... Path>
-	T& get(BasicCompound<ExceptionPolicy, Types...>& compound, std::string_view head, Path ... path)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class ... Path>
+	T& get(BasicCompound<ExceptionPolicy, Types...>& compound, KeyLike const& head, Path ... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		return get<T>(next, path...);
 		}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types>
-	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, std::string_view head)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
+	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
 		{return compound.template get<T>(head);}
 
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types, class ... Path>
-	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, std::string_view head, Path ... path)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class ... Path>
+	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head, Path ... path)
 		{
 		auto const& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		return get<T>(next, path...);
 		}
 
-	template<class ExceptionPolicy, class KeyType, class... Types>
-	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, std::string_view head)
+	template<class ExceptionPolicy, class KeyType, class ... Types, class KeyLike>
+	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
 		{return compound.contains(head);}
 
 
-	template<class ExceptionPolicy, class KeyType, class... Types, class ... Path>
-	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, std::string_view head, Path ... path)
+	template<class ExceptionPolicy, class KeyType, class ... Types, class KeyLike, class ... Path>
+	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head, Path ... path)
 		{
 		if(!contains(compound, head))
 			{return false;}
@@ -208,34 +210,34 @@ namespace DataStore
 		}
 
 
-	template<class ExceptionPolicy, class KeyType, class... Types>
-	bool erase(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head)
+	template<class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
+	bool erase(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{return compound.erase(typename BasicCompound<ExceptionPolicy, KeyType, Types...>::key_type{head});}
 
-	template<class ExceptionPolicy, class KeyType, class... Types, class... Path>
-	bool erase(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head, Path ... path)
+	template<class ExceptionPolicy, class KeyType, class... Types, class... Path, class KeyLike>
+	bool erase(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head, Path ... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		return erase(next, path...);
 		}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types>
-	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
+	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{compound.template insert<T>(typename BasicCompound<ExceptionPolicy, KeyType, Types...>::key_type{head}, std::forward<T>(value));}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types, class... Path>
-	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head, Path... path)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class... Path>
+	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head, Path... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		insert(std::forward<T>(value), next, path...);
 		}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types>
-	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
+	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{compound.template insertOrReplace<T>(typename BasicCompound<ExceptionPolicy, Types...>::key_type{head}, std::forward<T>(value));}
 
-	template<class T, class ExceptionPolicy, class KeyType, class... Types, class... Path>
-	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, std::string_view head, Path... path)
+	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class... Path>
+	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head, Path... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		insertOrReplace(std::forward<T>(value), next, path...);

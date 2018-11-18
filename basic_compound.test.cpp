@@ -4,6 +4,7 @@
 
 #include "stic/stic.hpp"
 
+#include "analib/inlinestring/inlinestring.hpp"
 #include <string>
 
 struct MyExceptionPolicy
@@ -84,7 +85,6 @@ STIC_TESTCASE("get")
 	STIC_ASSERT(n_children_ref == sut.childCount());
 	}
 
-
 STIC_TESTCASE("insert")
 	{
 	auto sut = makeSut();
@@ -110,8 +110,6 @@ STIC_TESTCASE("insert in subobj")
 	STIC_ASSERT(DataStore::get<std::string>(sut, "subobj", "Hello") == "Boo");
 	}
 
-#if 0
-
 STIC_TESTCASE("replace")
 	{
 	auto sut = makeSut();
@@ -122,4 +120,43 @@ STIC_TESTCASE("replace")
 	STIC_ASSERT(sut.get<int>("subobj") == 123);
 	STIC_ASSERT(n_children_ref == sut.childCount() );
 	}
-#endif
+
+
+struct MyExceptionPolicy2
+	{
+	[[noreturn]]
+	static void keyNotFound(Analib::InlineString<char, 16> const& key)
+		{throw key;}
+
+	template<class T>
+	[[noreturn]]
+	static void keyValueHasWrongType(Analib::InlineString<char, 16> const& key, size_t actualType)
+		{throw key;}
+
+	template<class T>
+	[[noreturn]]
+	static void keyAlreadyExists(Analib::InlineString<char, 16> const& key, T const& value)
+		{throw key;}
+
+	};
+
+template<class EP>
+using Compound2 = DataStore::BasicCompound<EP, Analib::InlineString<char, 16>, std::string, int>;
+
+Compound2<MyExceptionPolicy2> makeSut2()
+	{
+	Compound2<MyExceptionPolicy2> obj;
+
+	obj.insert(Analib::InlineString<char, 16>("foo"), std::string("Hello"));
+
+	return obj;
+	}
+
+
+STIC_TESTCASE("Different keytype")
+	{
+	auto sut = makeSut2();
+	STIC_ASSERT(sut.childCount() == 1);
+	STIC_ASSERT(sut.contains(Analib::InlineString<char, 16>("foo")));
+	STIC_ASSERT(sut.get<std::string>(Analib::InlineString<char, 16>("foo")) == "Hello");
+	}

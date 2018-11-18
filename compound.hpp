@@ -5,6 +5,7 @@
 
 #include "basic_compound.hpp"
 #include "analib/cxxstring/string.hpp"
+#include "analib/inlinestring/inlinestring.hpp"
 
 #include <cstdint>
 
@@ -14,13 +15,15 @@ namespace Yggdrasil
 	using vec4_t __attribute__((vector_size(4*sizeof(T)))) = T ;
 
 	using String = Analib::StringNoSso;
+	using KeyType = Analib::InlineString<char, 16>;
 
 
 	template<class ExceptionPolicy>
 	using Compound = DataStore::BasicCompound
 		<
 		 ExceptionPolicy
-		,std::string
+		,KeyType
+
 		// Basic intger types
 		,int8_t
 		,uint8_t
