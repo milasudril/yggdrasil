@@ -5,6 +5,7 @@
 
 #include "basic_compound.hpp"
 #include "analib/cxxstring/string.hpp"
+
 #include <cstdint>
 
 namespace Yggdrasil
@@ -19,7 +20,7 @@ namespace Yggdrasil
 	using Compound = DataStore::BasicCompound
 		<
 		 ExceptionPolicy
-
+		,std::string
 		// Basic intger types
 		,int8_t
 		,uint8_t
