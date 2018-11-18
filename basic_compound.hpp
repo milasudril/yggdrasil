@@ -18,6 +18,8 @@ namespace DataStore
 	class ValueWrapper
 		{
 		public:
+			using element_type = T;
+
 			template<class... Args>
 			ValueWrapper(Args&&... args) : m_value(std::make_unique<T>(std::forward<Args>(args)...))
 				{}
@@ -34,6 +36,8 @@ namespace DataStore
 	class ValueWrapper<T, std::enable_if_t<(sizeof(std::variant<T>) <= 32)> >
 		{
 		public:
+			using element_type = T;
+
 			template<class...Args>
 			ValueWrapper(Args&&... args) : m_value(std::forward<Args>(args)...)
 				{}
@@ -50,8 +54,9 @@ namespace DataStore
 	class BasicCompound
 		{
 		public:
-			using mapped_type = std::variant<
-				ValueWrapper<BasicCompound>
+			using mapped_type = std::variant
+				<
+				  ValueWrapper<BasicCompound>
 				, ValueWrapper<Types>...
 				, ValueWrapper<std::vector<BasicCompound>>
 				, ValueWrapper<std::vector<Types>>...

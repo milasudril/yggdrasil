@@ -8,78 +8,7 @@
 #include <type_traits>
 
 namespace DataStore
-	{		
-	template<class T>
-	constexpr decltype(std::decay_t<T>::typeName()) getTypeName() noexcept
-		{return std::decay_t<T>::typeName();}
+	{
 
-	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, std::string>, char const*> getTypeName() noexcept
-		{return "str";}
-
-	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, std::unique_ptr<std::string>>, char const*> getTypeName() noexcept
-		{return getTypeName<std::string>();}
-
-	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, float>, char const*> getTypeName() noexcept
-		{return "f20";}
-
-	template<class T>
-	constexpr std::enable_if_t<std::is_same_v<std::decay_t<T>, double>, char const*> getTypeName() noexcept
-		{return "f40";}
-
-	namespace detail
-		{
-		// Helper function for concatenating two string sources into a std::array.
-		template<class SrcA, class SrcB>
-		constexpr auto strcat(SrcA const& a, SrcB const& b) noexcept
-			{
-			constexpr auto ptr_a = a();
-			constexpr auto ptr_b = b();
-			constexpr auto N_a = strlen(ptr_a);
-			constexpr auto N_b = strlen(ptr_b);
-
-			std::array<char, N_a + N_b + 1> ret{};
-			auto ptr_src = ptr_a;
-			auto ptr_dest = ret.begin();
-			while(*ptr_src)
-				{
-				*ptr_dest = *ptr_src;
-				++ptr_dest;
-				++ptr_src;
-				}
-
-			ptr_src = ptr_b;
-			while(*ptr_src)
-				{
-				*ptr_dest = *ptr_src;
-				++ptr_dest;
-				++ptr_src;
-				}
-
-			return ret;
-			}
-		}
-
-	template<class T>
-	struct ArrayTypeName
-		{
-		public:
-			static constexpr char const* typeName() noexcept
-				{return retval;}
-
-		private:
-			static constexpr auto val = detail::strcat([](){return getTypeName<T>();}
-				, [](){return "a";});
-			static constexpr auto retval = val.begin();
-		};
-
-	template<class T>
-	constexpr decltype(getTypeName<typename std::decay_t<T>::value_type>()) getTypeName() noexcept
-		{
-		using Type = typename std::decay_t<T>::value_type;
-		return ArrayTypeName<Type>::typeName();
-		}
 	}
 #endif

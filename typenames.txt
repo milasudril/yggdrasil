@@ -1,0 +1,45 @@
+i8_v
+u8_v
+i10v
+u10v
+i20v
+u20v
+i40v
+u40v
+f20v
+f40v
+I20v
+U20v
+F20v
+strv
+objv
+i8_a
+u8_a
+i10a
+u10a
+i20a
+u20a
+i40a
+u40a
+f20a
+f40a
+I20a
+U20a
+F20a
+stra
+obja
+
+(a, v)                     2   (1 bit)
+(0, 8, r, j)               4   (2 bit)
+(0, 1, 2, 4, t, b)         6   (3 bit)
+(i, u, f, I, U, F, s ,o)   8   (3 bit)
+                                9 bitar
+
+
+(a, v)                     2   (1 bit)
+00, 08, 10, 20, 40         5   (3 bit)
+(i, u, f, I, U, F, s ,o)   8   (3 bit)
+                                7 bitar
+
+(a, v)                                                                           2   (1 bit)
+00o, 00s, i08, i10, i20, i40, u08, u10, u20, u40, f20, f40, I20, U20, F20       15   (4 bit)
