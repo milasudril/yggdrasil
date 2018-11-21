@@ -3,6 +3,8 @@
 #ifndef DATA_STORE_BASIC_COMPOUND_HPP
 #define DATA_STORE_BASIC_COMPOUND_HPP
 
+#include "utility.hpp"
+
 #include <variant>
 #include <map>
 #include <memory>
@@ -63,6 +65,8 @@ namespace DataStore
 				>;
 
 			using key_type = KeyType;
+
+			using SupportedTypes = TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, Types...>;
 
 
 			template<class T, class KeyLike>

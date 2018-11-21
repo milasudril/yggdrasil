@@ -1,7 +1,9 @@
 //@	{"targets":[{"name":"value_decoder.hpp","type":"include"}]}
 
-#ifndef DATASTORE_VALUE_DECODER_HPP
-#define DATASTORE_VALUE_DECODER_HPP
+#ifndef DATAS_TORE_VALUE_DECODER_HPP
+#define DATAS_TORE_VALUE_DECODER_HPP
+
+#include "utility.hpp"
 
 #include <type_traits>
 #include <cstring>
@@ -15,16 +17,6 @@
 
 namespace DataStore
 	{
-	template<class T>
-	struct Empty{};
-
-    template<class ... Types>
-    struct TypeSet
-        {
-        static constexpr size_t size()
-            {return sizeof...(Types);}
-        };
-
 	namespace detail
 		{
 		template<class TypeId, class DecodeFunction>
