@@ -3,50 +3,88 @@
 #include "value_decoder.hpp"
 
 #include <string>
+#include <vector>
 #include <cassert>
+
+enum class StatusCode:int{Success, UnknownType, EndOfFile};
+
+bool readFailed(StatusCode status)
+	{return status!=StatusCode::Success;}
 
 class MyDecoderPolicy
 	{
 	public:
-		enum class StatusCode:int{UnknownType, String, Int, Double};
-
 		using SupportedTypes = DataStore::TypeSet<int, std::string, double>;
 
-		enum class TypeId:intptr_t{String, Int, Double};
+		bool checkDispatchOrder() const
+			{
+			std::vector<std::string> dispatch_order{"int", "string", "double"};
+			return m_dispatch_order == dispatch_order;
+			}
 
-		static constexpr TypeId getTypeId(DataStore::Empty<std::string>)
-			{return TypeId::String;}
+		enum class LastTypeMode{ReturnUnknownType, ReturnEndOfFile};
 
-		static constexpr TypeId getTypeId(DataStore::Empty<int>)
-			{return TypeId::Int;}
+		explicit MyDecoderPolicy(LastTypeMode mode) : m_type(0), m_mode(mode){}
 
-		static constexpr TypeId getTypeId(DataStore::Empty<double>)
-			{return TypeId::Double;}
+		auto getNextType()
+			{
+			auto ret = m_type;
+			++m_type;
+			if(m_mode == LastTypeMode::ReturnUnknownType)
+				{return std::make_pair(ret, StatusCode::Success);}
 
-		static constexpr auto hash(TypeId type_id)
-			{return static_cast<intptr_t>(type_id);}
-
+			else
+				{return std::make_pair(ret, ret<3 ? StatusCode::Success : StatusCode::EndOfFile);}
+			}
 
 		MyDecoderPolicy(MyDecoderPolicy const&) = delete;
 
 		auto decode(DataStore::Empty<std::string>)
-			{return StatusCode::String;}
+			{
+			m_dispatch_order.push_back("string");
+			return StatusCode::Success;
+			}
 
 		auto decode(DataStore::Empty<int>)
-			{return  StatusCode::Int;}
+			{
+			m_dispatch_order.push_back("int");
+			return  StatusCode::Success;
+			}
+
+		auto decode(DataStore::Empty<double>)
+			{
+			m_dispatch_order.push_back("double");
+			return StatusCode::Success;
+			}
 
 		auto unknownType()
 			{return StatusCode::UnknownType;}
 
-		auto decode(DataStore::Empty<double>)
-			{return StatusCode::Double;}
+
+	private:
+		size_t m_type;
+		LastTypeMode m_mode;
+
+		std::vector<std::string> m_dispatch_order;
 	};
 
 int main()
 	{
-	assert(DataStore::decode(MyDecoderPolicy{}, MyDecoderPolicy::TypeId::String) == MyDecoderPolicy::StatusCode::String);
-	assert(DataStore::decode(MyDecoderPolicy{}, MyDecoderPolicy::TypeId::Int) == MyDecoderPolicy::StatusCode::Int);
-	assert(DataStore::decode(MyDecoderPolicy{}, MyDecoderPolicy::TypeId::Double) == MyDecoderPolicy::StatusCode::Double);
-	assert(DataStore::decode(MyDecoderPolicy{}, static_cast<MyDecoderPolicy::TypeId>(35890730)) == MyDecoderPolicy::StatusCode::UnknownType);
+	assert(DataStore::decode(MyDecoderPolicy{MyDecoderPolicy::LastTypeMode::ReturnUnknownType}) == StatusCode::Success);
+
+	MyDecoderPolicy decoder_a{MyDecoderPolicy::LastTypeMode::ReturnUnknownType};
+	assert(DataStore::decode(decoder_a) == StatusCode::Success);
+	assert(DataStore::decode(decoder_a) == StatusCode::Success);
+	assert(DataStore::decode(decoder_a) == StatusCode::Success);
+	assert(DataStore::decode(decoder_a) == StatusCode::UnknownType);
+	assert(decoder_a.checkDispatchOrder());
+
+	MyDecoderPolicy decoder_b{MyDecoderPolicy::LastTypeMode::ReturnEndOfFile};
+	assert(DataStore::decode(decoder_b) == StatusCode::Success);
+	assert(DataStore::decode(decoder_b) == StatusCode::Success);
+	assert(DataStore::decode(decoder_b) == StatusCode::Success);
+	assert(DataStore::decode(decoder_b) == StatusCode::EndOfFile);
+	assert(decoder_b.checkDispatchOrder());
+
 	return 0;
 	}
