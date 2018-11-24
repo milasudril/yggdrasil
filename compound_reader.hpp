@@ -14,17 +14,23 @@ namespace DataStore
 	{
 	enum class StatusCode:int{Success, UnknownType, EndOfFile};
 
-	bool readFailed(StatusCode code)
+	[[nodiscard]] inline bool readFailed(StatusCode code)
 		{return code!=StatusCode::Success;}
+
+
+	template<class Source, class Compound>
+	[[nodiscard]] StatusCode read(Source&& source, Compound& val);
 
 	template<class Source, class Compound>
 	class BinaryCompoundDecoder
 		{
 		public:
-			explicit BinaryCompoundDecoder(Source&& src, Compound& dest):r_source(src), r_sink(dest)
-				{}
-
-			explicit BinaryCompoundDecoder(Source&& src, Compound&& dest):r_source(src), r_sink(dest)
+			explicit BinaryCompoundDecoder(Source& src
+				, Compound& dest
+				, Analib::InlineString<char, 16> key_current):
+				  r_source(src)
+				, r_sink(dest)
+				, m_key_current(key_current)
 				{}
 
 			using SupportedTypes = typename Compound::SupportedTypes;
@@ -41,6 +47,8 @@ namespace DataStore
 			[[nodiscard]] static constexpr auto unknownType()
 				{return StatusCode::UnknownType;}
 
+
+
 			template<class T>
 			[[nodiscard]]
 			std::enable_if_t<std::is_arithmetic_v<T>, StatusCode> read(Empty<T>)
@@ -49,7 +57,7 @@ namespace DataStore
 				if(unlikely(!r_source.read(ret)))
 					{return StatusCode::EndOfFile;}
 
-				r_current_compound->insert(m_current_key, std::move(ret));
+				r_sink.insert(m_key_current, std::move(ret));
 
 				return StatusCode::Success;
 				}
@@ -68,25 +76,19 @@ namespace DataStore
 				if(unlikely(!r_source.read(val.data(), size)))
 					{return StatusCode::EndOfFile;}
 
-				r_current_compound->insert(m_current_key, std::move(val));
+				r_sink.insert(m_key_current, std::move(val));
 
 				return StatusCode::Success;
 				}
 
 			[[nodiscard]] StatusCode read(Empty<Compound>)
 				{
-				uint64_t size{0};
-				if(unlikely(!r_source.read(size)))
-					{return StatusCode::EndOfFile;}
-
 				Compound val;
-				while(unlikely(size!=0))
-					{
-//					readRecord(*this);
-					--size;
-					}
+				auto result = DataStore::read(r_source, val);
+				if(unlikely(readFailed(result)))
+					{return result;}
 
-				r_current_compound->insert(m_current_key, std::move(val));
+				r_sink.insert(m_key_current, std::move(val));
 
 				return StatusCode::UnknownType;
 				}
@@ -96,12 +98,33 @@ namespace DataStore
 		private:
 			Source& r_source;
 			Compound& r_sink;
-
-
-			Compound* r_current_compound;
-			Analib::InlineString<char, 16> m_current_key;
+			Analib::InlineString<char, 16> const m_key_current;
 
 		};
+
+
+	template<class Source, class Compound>
+	[[nodiscard]] StatusCode read(Source&& source, Compound& val)
+		{
+		uint64_t size{0};
+		if(unlikely(!source.read(size)))
+			{return StatusCode::EndOfFile;}
+
+		while(unlikely(size!=0))
+			{
+			Analib::InlineString<char, 16> key_next;
+			if(unlikely(!source.read(key_next)))
+				{return StatusCode::EndOfFile;}
+
+			auto result = readRecord(BinaryCompoundDecoder{source, val, key_next});
+			if(unlikely(readFailed(result)))
+				{return result;}
+
+			--size;
+			}
+
+		return StatusCode::Success;
+		}
 	}
 
 #endif

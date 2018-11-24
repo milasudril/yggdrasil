@@ -53,5 +53,6 @@ using Compound = DataStore::BasicCompound<MyExceptionPolicy, Analib::InlineStrin
 int main()
 	{
 	Compound compound;
-	assert(readAll(DataStore::BinaryCompoundDecoder{Reader{}, compound}) == DataStore::StatusCode::EndOfFile);
+
+	assert(DataStore::read(Reader{}, compound) == DataStore::StatusCode::EndOfFile);
 	}

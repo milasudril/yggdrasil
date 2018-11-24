@@ -63,7 +63,6 @@ namespace DataStore
 		       HasSize<T>::value && HasData<T>::value
 			&& std::is_arithmetic_v<std::decay_t<decltype(*std::declval<T>().data())>>;
 		};
-
 	}
 
 #endif
