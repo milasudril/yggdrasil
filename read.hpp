@@ -17,11 +17,11 @@ namespace DataStore
 	namespace detail
 		{
 		template<class Reader, class Type>
-		auto read(Reader& policy)
+		[[nodiscard]] auto read(Reader& policy)
 			{return policy.read(Empty<Type>{});}
 
 		template<class Reader>
-		auto unknown_type(Reader& policy)
+		[[nodiscard]] auto unknown_type(Reader& policy)
 			{return policy.unknownType();}
 
 		template<class Reader>
@@ -51,7 +51,7 @@ namespace DataStore
 			};
 
 		template<class Reader, class TypeSet>
-		static constexpr auto buildVtable()
+		[[nodiscard]] static constexpr auto buildVtable()
 			{
 			VtableEntries<Reader, GetSize<TypeSet>::value> vt{};
 			BuildVtable<Reader, TypeSet>::setCallback(vt);
@@ -63,7 +63,7 @@ namespace DataStore
 		}
 
     template<class Reader>
-    auto read(Reader&& policy)
+    [[nodiscard]] auto read(Reader&& policy)
         {
         auto [type_index, status] = policy.readType();
         if(unlikely(readFailed(status)))
