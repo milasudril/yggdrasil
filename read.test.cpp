@@ -70,21 +70,23 @@ class MyReader
 
 int main()
 	{
-	assert(DataStore::read(MyReader{MyReader::LastTypeMode::ReturnUnknownType}) == StatusCode::Success);
+	assert(DataStore::readRecord(MyReader{MyReader::LastTypeMode::ReturnUnknownType}) == StatusCode::Success);
 
 	MyReader reader_a{MyReader::LastTypeMode::ReturnUnknownType};
-	assert(DataStore::read(reader_a) == StatusCode::Success);
-	assert(DataStore::read(reader_a) == StatusCode::Success);
-	assert(DataStore::read(reader_a) == StatusCode::Success);
-	assert(DataStore::read(reader_a) == StatusCode::UnknownType);
+	assert(DataStore::readRecord(reader_a) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_a) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_a) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_a) == StatusCode::UnknownType);
 	assert(reader_a.checkDispatchOrder());
 
 	MyReader reader_b{MyReader::LastTypeMode::ReturnEndOfFile};
-	assert(DataStore::read(reader_b) == StatusCode::Success);
-	assert(DataStore::read(reader_b) == StatusCode::Success);
-	assert(DataStore::read(reader_b) == StatusCode::Success);
-	assert(DataStore::read(reader_b) == StatusCode::EndOfFile);
+	assert(DataStore::readRecord(reader_b) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_b) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_b) == StatusCode::Success);
+	assert(DataStore::readRecord(reader_b) == StatusCode::EndOfFile);
 	assert(reader_b.checkDispatchOrder());
+
+	assert(DataStore::readAll(MyReader{MyReader::LastTypeMode::ReturnUnknownType}) != StatusCode::Success);
 
 	return 0;
 	}

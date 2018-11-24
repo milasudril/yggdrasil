@@ -63,7 +63,7 @@ namespace DataStore
 		}
 
     template<class Reader>
-    [[nodiscard]] auto read(Reader&& policy)
+    [[nodiscard]] auto readRecord(Reader&& policy)
         {
         auto [type_index, status] = policy.readType();
         if(unlikely(readFailed(status)))
@@ -75,6 +75,17 @@ namespace DataStore
             {return policy.unknownType();}
         return detail::vtable<Policy, TypeSet>[type_index](policy);
         }
+
+	template<class Reader>
+	[[nodiscard]] auto readAll(Reader&& policy)
+		{
+		while(true)
+			{
+			auto status = readRecord(policy);
+			if(unlikely(readFailed(status)))
+				{return status;}
+			}
+		}
 	}
 
 #endif
