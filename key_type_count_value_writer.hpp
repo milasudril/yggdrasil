@@ -36,7 +36,10 @@ namespace DataStore
 
 			void operator()(KeyTypeCountValue::KeyType key, Compound const& item)
 				{
-			//	puts(key.begin());
+				r_sink.write(key)
+					.write(SupportedTypes::template getTypeIndex<Compound>())
+					.write(static_cast<uint64_t>(item.childCount()));
+				item.visitItems(*this);
 				}
 
 			template<template<class> class Sequence>
