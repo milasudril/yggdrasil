@@ -23,30 +23,45 @@ struct MyExceptionPolicy
 		{throw key;}
 	};
 
+#include <iostream>
+
 struct Writer
 	{
 	template<class T>
 	std::enable_if_t<std::is_arithmetic_v<T>, Writer>&
 	write(T value)
-		{return *this;}
+		{
+		std::cout << value << std::endl;
+		return *this;
+		}
 
 	template<class T>
 	std::enable_if_t<!std::is_arithmetic_v<T>
 		&& std::is_trivially_default_constructible_v<T>
 		&& std::is_standard_layout_v<T>, Writer>&
 	write(T const& data_block)
-		{return *this;}
+		{
+		std::for_each(std::begin(data_block), std::end(data_block), [](auto x)
+			{std::cout << x;});
+		std::cout << std::endl;
+		return *this;
+		}
 
 	template<class T>
 	std::enable_if_t<std::is_arithmetic_v<T>, Writer>&
 	write(T const* value, size_t N)
-		{return *this;}
+		{
+		std::for_each(value, value + N, [](auto x)
+			{std::cout << x << " ";});
+		std::cout << std::endl;
+		return *this;
+		}
 
 	template<class T>
 	std::enable_if_t<!std::is_arithmetic_v<T>
 		&& std::is_trivially_default_constructible_v<T>
 		&& std::is_standard_layout_v<T>, Writer>&
-	write(T const& data_block, size_t N)
+	write(T const* data_block, size_t N)
 		{return *this;}
 	};
 
@@ -70,4 +85,6 @@ int main()
 	auto sut = makeSut();
 
 	sut.visitItems(DataStore::KeyTypeCountValueWriter<Compound, Writer>{Writer{}});
+
+	std::cout<< std::endl;
 	}

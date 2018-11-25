@@ -36,20 +36,29 @@ namespace DataStore
 
 			void operator()(KeyTypeCountValue::KeyType key, Compound const& item)
 				{
-				puts(key.begin());
+			//	puts(key.begin());
 				}
 
 			template<template<class> class Sequence>
 			std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value>
 			operator()(KeyTypeCountValue::KeyType key, Sequence<Compound> const&)
 				{
-				puts(key.begin());
+			//	puts(key.begin());
 				}
 
 			template<template<class> class Sequence, class SimpleArray>
 			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value>
-			operator()(KeyTypeCountValue::KeyType key, Sequence<SimpleArray> const&)
-				{puts("Never called\n");}
+			operator()(KeyTypeCountValue::KeyType key, Sequence<SimpleArray> const& item)
+				{
+				r_sink.write(key)
+					.write(SupportedTypes::template getTypeIndex<Sequence<SimpleArray>>())
+					.write(static_cast<uint64_t>(item.size()));
+				std::for_each(item.begin(), item.end(), [this](SimpleArray const& value)
+					{
+					r_sink.write(static_cast<uint64_t>(value.size()))
+						.write(value.data(), value.size());
+					});
+				}
 
 		private:
 			Writer& r_sink;

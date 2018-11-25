@@ -114,7 +114,28 @@ namespace DataStore
 			template<template<class> class Sequence, class SimpleArray>
 			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
 			read(Empty<Sequence<SimpleArray>>)
-				{return StatusCode::UnknownType;}
+				{
+				uint64_t size{0};
+				if(unlikely(!r_source.read(size)))
+					{return StatusCode::EndOfFile;}
+				Sequence<SimpleArray> seq;
+				seq.reserve(size);
+				while(size!=0)
+					{
+					uint64_t array_size{0};
+					if(unlikely(!r_source.read(array_size)))
+						{return StatusCode::EndOfFile;}
+
+					SimpleArray val;
+					val.reserve(array_size);
+					if(unlikely(!r_source.read(val.data(), val.size())))
+						{return StatusCode::EndOfFile;}
+					seq.push_back(std::move(val));
+					--size;
+					}
+				r_sink.insert(m_key_current, std::move(seq));
+				return StatusCode::Success;
+				}
 
 		private:
 			Source& r_source;
