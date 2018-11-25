@@ -67,7 +67,7 @@ namespace DataStore
 					{return StatusCode::EndOfFile;}
 
 				T val{};
-				val.reserve();
+				val.reserve(size);
 
 				if(unlikely(!r_source.read(val.data(), size)))
 					{return StatusCode::EndOfFile;}
@@ -110,6 +110,11 @@ namespace DataStore
 				r_sink.insert(m_key_current, std::move(seq));
 				return StatusCode::Success;
 				}
+
+			template<template<class> class Sequence, class SimpleArray>
+			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
+			read(Empty<Sequence<SimpleArray>>)
+				{return StatusCode::UnknownType;}
 
 		private:
 			Source& r_source;
