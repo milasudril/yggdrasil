@@ -11,7 +11,6 @@
 #include <optional>
 #include <cstddef>
 
-
 namespace DataStore
 	{
 	namespace detail
