@@ -44,9 +44,16 @@ namespace DataStore
 
 			template<template<class> class Sequence>
 			std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value>
-			operator()(KeyTypeCountValue::KeyType key, Sequence<Compound> const&)
+			operator()(KeyTypeCountValue::KeyType key, Sequence<Compound> const& item)
 				{
-			//	puts(key.begin());
+				r_sink.write(key)
+					.write(SupportedTypes::template getTypeIndex<Compound>())
+					.write(static_cast<uint64_t>(item.size()));
+				std::for_each(item.begin(), item.end(), [*this](auto const& val) mutable
+					{
+					r_sink.write(static_cast<uint64_t>(val.childCount()));
+					val.visitItems(*this);
+					});
 				}
 
 			template<template<class> class Sequence, class SimpleArray>
