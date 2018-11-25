@@ -29,11 +29,11 @@ namespace DataStore
 		template<class Reader, size_t N>
 		using VtableEntries = std::array<ReadFunction<Reader>, N>;
 
-		template<class Reader, class TypeSet, size_t N=GetSize<TypeSet>::value>
+		template<class Reader, class TypeSet, size_t N=TypeSet::size()>
 		struct BuildVtable
 			{
 			using CurrentType = typename GetType<N - 1, TypeSet>::type;
-			static constexpr auto vt_size = GetSize<TypeSet>::value;
+			static constexpr auto vt_size = TypeSet::size();
 			static constexpr void setCallback(VtableEntries<Reader, vt_size>& vt)
 				{
 				vt[N - 1] = read<Reader, CurrentType>;
@@ -44,7 +44,7 @@ namespace DataStore
 		template<class Reader, class TypeSet>
 		struct BuildVtable<Reader, TypeSet, 0>
 			{
-			static constexpr auto vt_size = GetSize<TypeSet>::value;
+			static constexpr auto vt_size = TypeSet::size();
 			static constexpr void setCallback(VtableEntries<Reader, vt_size>&)
 				{ }
 			};
@@ -52,7 +52,7 @@ namespace DataStore
 		template<class Reader, class TypeSet>
 		[[nodiscard]] static constexpr auto buildVtable()
 			{
-			VtableEntries<Reader, GetSize<TypeSet>::value> vt{};
+			VtableEntries<Reader, TypeSet::size()> vt{};
 			BuildVtable<Reader, TypeSet>::setCallback(vt);
 			return vt;
 			}
@@ -70,7 +70,7 @@ namespace DataStore
 
         using Policy = std::decay_t<Reader>;
         using TypeSet = typename Policy::SupportedTypes;
-        if(unlikely(type_index>=GetSize<TypeSet>::value))
+        if(unlikely(type_index>=TypeSet::size()))
             {return policy.unknownType();}
         return detail::vtable<Policy, TypeSet>[type_index](policy);
         }

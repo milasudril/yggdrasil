@@ -66,8 +66,7 @@ namespace DataStore
 
 			using key_type = KeyType;
 
-			using SupportedTypes = TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, Types...>;
-
+			using SupportedTypes = TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, std::vector<Types>...>;
 
 			template<class T, class KeyLike>
 			T& get(KeyLike const& key)
