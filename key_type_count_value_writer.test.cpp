@@ -25,13 +25,40 @@ struct MyExceptionPolicy
 
 #include <iostream>
 
+class OutputMock
+	{
+	public:
+		void write(void const* buffer, size_t count)
+			{
+			auto bytes = reinterpret_cast<std::byte const*>(buffer);
+			while(count!=0)
+				{
+				m_buffer.push_back(*bytes);
+				++bytes;
+				--count;
+				}
+			}
+
+		auto begin() const
+			{return m_buffer.begin();}
+
+		auto end() const
+			{return m_buffer.end();}
+
+	private:
+		std::vector<std::byte> m_buffer;
+	};
+
+template<class Sink>
 struct Writer
 	{
+	explicit Writer(Sink& sink) : r_sink(sink) {}
+
 	template<class T>
 	std::enable_if_t<std::is_arithmetic_v<T>, Writer>&
 	write(T value)
 		{
-		std::cout << value << std::endl;
+		r_sink.write(&value, sizeof(T));
 		return *this;
 		}
 
@@ -41,9 +68,7 @@ struct Writer
 		&& std::is_standard_layout_v<T>, Writer>&
 	write(T const& data_block)
 		{
-		std::for_each(std::begin(data_block), std::end(data_block), [](auto x)
-			{std::cout << x;});
-		std::cout << std::endl;
+		r_sink.write(&data_block, sizeof(T));
 		return *this;
 		}
 
@@ -51,9 +76,7 @@ struct Writer
 	std::enable_if_t<std::is_arithmetic_v<T>, Writer>&
 	write(T const* value, size_t N)
 		{
-		std::for_each(value, value + N, [](auto x)
-			{std::cout << x << " ";});
-		std::cout << std::endl;
+		r_sink.write(value, N*sizeof(T));
 		return *this;
 		}
 
@@ -63,6 +86,8 @@ struct Writer
 		&& std::is_standard_layout_v<T>, Writer>&
 	write(T const* data_block, size_t N)
 		{return *this;}
+
+	Sink& r_sink;
 	};
 
 using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValue::KeyType, std::string, int>;
@@ -82,9 +107,10 @@ Compound makeSut()
 
 int main()
 	{
+	OutputMock output;
 	auto sut = makeSut();
 
-	sut.visitItems(DataStore::KeyTypeCountValueWriter<Compound, Writer>{Writer{}});
+	sut.visitItems(DataStore::KeyTypeCountValueWriter<Compound, Writer<OutputMock>>{Writer{output}});
 
-	std::cout<< std::endl;
+	std::for_each(output.begin(), output.end(), [](auto x){putchar(static_cast<char>(x));});
 	}

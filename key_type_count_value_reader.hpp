@@ -17,7 +17,6 @@ namespace DataStore
 	[[nodiscard]] inline bool readFailed(StatusCode code)
 		{return code!=StatusCode::Success;}
 
-
 	template<class Source, class Compound>
 	[[nodiscard]] StatusCode read(Source&& source, Compound& val);
 
@@ -38,7 +37,7 @@ namespace DataStore
 
 			[[nodiscard]] std::pair<size_t, StatusCode> readType()
 				{
-				uint64_t type{UnknownType};
+				KeyTypeCountValue::TypeId type{UnknownType};
 				if(unlikely(!r_source.read(type)))
 					{return std::make_pair(type, StatusCode::EndOfFile);}
 				return std::make_pair(type, StatusCode::Success);
@@ -62,7 +61,7 @@ namespace DataStore
 			template<class T>
 			[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, StatusCode> read(Empty<T>)
 				{
-				uint64_t size{0};
+				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 
@@ -93,7 +92,7 @@ namespace DataStore
 			[[nodiscard]] std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, StatusCode>
 			read(Empty<Sequence<Compound>>)
 				{
-				uint64_t size{0};
+				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 				Sequence<Compound> seq;
@@ -115,14 +114,14 @@ namespace DataStore
 			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
 			read(Empty<Sequence<SimpleArray>>)
 				{
-				uint64_t size{0};
+				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 				Sequence<SimpleArray> seq;
 				seq.reserve(size);
 				while(size!=0)
 					{
-					uint64_t array_size{0};
+					KeyTypeCountValue::ArraySize array_size{0};
 					if(unlikely(!r_source.read(array_size)))
 						{return StatusCode::EndOfFile;}
 
