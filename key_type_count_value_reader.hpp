@@ -5,7 +5,8 @@
 
 #include "utility.hpp"
 #include "key_type_count_value_defs.hpp"
-#include "read.hpp"
+
+#include "analib/typeset/type_set.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -32,22 +33,11 @@ namespace DataStore
 				, m_key_current(key_current)
 				{}
 
-			using SupportedTypes = typename Compound::SupportedTypes;
-			static constexpr auto UnknownType = SupportedTypes::size();
-
-			[[nodiscard]] std::pair<size_t, StatusCode> readType()
-				{
-				KeyTypeCountValue::TypeId type{UnknownType};
-				if(unlikely(!r_source.read(type)))
-					{return std::make_pair(type, StatusCode::EndOfFile);}
-				return std::make_pair(type, StatusCode::Success);
-				}
-
-			[[nodiscard]] static constexpr auto unknownType()
+			[[nodiscard]] constexpr auto operator()()
 				{return StatusCode::UnknownType;}
 
 			template<class T>
-			[[nodiscard]] std::enable_if_t<std::is_arithmetic_v<T>, StatusCode> read(Empty<T>)
+			[[nodiscard]] std::enable_if_t<std::is_arithmetic_v<T>, StatusCode> operator()(Analib::Empty<T>)
 				{
 				T ret{};
 				if(unlikely(!r_source.read(ret)))
@@ -59,7 +49,7 @@ namespace DataStore
 				}
 
 			template<class T>
-			[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, StatusCode> read(Empty<T>)
+			[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, StatusCode> operator()(Analib::Empty<T>)
 				{
 				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
@@ -76,7 +66,7 @@ namespace DataStore
 				return StatusCode::Success;
 				}
 
-			[[nodiscard]] StatusCode read(Empty<Compound>)
+			[[nodiscard]] StatusCode operator()(Analib::Empty<Compound>)
 				{
 				Compound val;
 				auto result = DataStore::read(r_source, val);
@@ -88,9 +78,10 @@ namespace DataStore
 				return result;
 				}
 
+
 			template<template<class> class Sequence>
 			[[nodiscard]] std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, StatusCode>
-			read(Empty<Sequence<Compound>>)
+			operator()(Analib::Empty<Sequence<Compound>>)
 				{
 				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
@@ -112,7 +103,7 @@ namespace DataStore
 
 			template<template<class> class Sequence, class SimpleArray>
 			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
-			read(Empty<Sequence<SimpleArray>>)
+			operator()(Analib::Empty<Sequence<SimpleArray>>)
 				{
 				KeyTypeCountValue::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
@@ -142,23 +133,26 @@ namespace DataStore
 			KeyTypeCountValue::KeyType m_key_current;
 		};
 
-
 	template<class Source, class Compound>
 	[[nodiscard]] StatusCode read(Source&& source, Compound& val)
 		{
-		uint64_t size{0};
+		KeyTypeCountValue::ArraySize size{0};
 		if(unlikely(!source.read(size)))
 			{return StatusCode::EndOfFile;}
 
 		while(unlikely(size!=0))
 			{
-			KeyTypeCountValue::KeyType key_next;
-			if(unlikely(!source.read(key_next)))
+			KeyTypeCountValue::KeyType key;
+			if(unlikely(!source.read(key)))
 				{return StatusCode::EndOfFile;}
 
-			auto result = readRecord(KeyTypeCountValueReader{source, val, key_next});
-			if(unlikely(readFailed(result)))
-				{return result;}
+			KeyTypeCountValue::TypeId type_id;
+			if(unlikely(!source.read(key)))
+				{return StatusCode::EndOfFile;}
+
+			auto status = Compound::SupportedTypes::select(type_id, KeyTypeCountValueReader{source, val, key});
+			if(unlikely(readFailed(status)))
+				{return status;}
 
 			--size;
 			}
