@@ -3,7 +3,7 @@
 #ifndef DATA_STORE_BASIC_COMPOUND_HPP
 #define DATA_STORE_BASIC_COMPOUND_HPP
 
-#include "utility.hpp"
+#include "analib/typeset/type_set.hpp"
 
 #include <variant>
 #include <map>
@@ -66,7 +66,7 @@ namespace DataStore
 
 			using key_type = KeyType;
 
-			using SupportedTypes = TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, std::vector<Types>...>;
+			using SupportedTypes = Analib::TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, std::vector<Types>...>;
 
 			template<class T, class KeyLike>
 			T& get(KeyLike const& key)
