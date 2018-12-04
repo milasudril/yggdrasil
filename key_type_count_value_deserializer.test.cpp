@@ -1,6 +1,6 @@
-//@	{"targets":[{"name":"key_type_count_value_reader.test","type":"application","autorun":1}]}
+//@	{"targets":[{"name":"key_type_count_value_deserializer.test","type":"application","autorun":1}]}
 
-#include "key_type_count_value_reader.hpp"
+#include "key_type_count_value_deserializer.hpp"
 
 #include "basic_compound.hpp"
 
@@ -19,7 +19,7 @@ struct MyExceptionPolicy
 
 	template<class T>
 	[[noreturn]]
-	static void keyAlreadyExists(DataStore::KeyTypeCountValue::KeyType key, T const& value)
+	static void keyAlreadyExists(DataStore::KeyTypeCountValueDefs::KeyType key, T const& value)
 		{throw key;}
 	};
 
@@ -50,7 +50,7 @@ struct Reader
 		{return true;}
 	};
 
-using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValue::KeyType, std::string, int>;
+using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValueDefs::KeyType, std::string, int>;
 
 
 int main()

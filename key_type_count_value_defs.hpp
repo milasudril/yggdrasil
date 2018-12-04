@@ -12,7 +12,7 @@
 
 namespace DataStore
 	{
-	namespace KeyTypeCountValue
+	namespace KeyTypeCountValueDefs
 		{
 		static_assert(CHAR_BIT == 8, "This library requires 8-bit chars");
 		using KeyType = Analib::InlineString<char, 32>;

@@ -1,7 +1,7 @@
-//@	{"targets":[{"name":"key_type_count_value_reader.hpp","type":"include"}]}
+//@	{"targets":[{"name":"key_type_count_value_deserializer.hpp","type":"include"}]}
 
-#ifndef DATA_STORE_KEY_TYPE_COUNT_VALUE_READER_HPP
-#define DATA_STORE_KEY_TYPE_COUNT_VALUE_READER_HPP
+#ifndef DATA_STORE_KEY_TYPE_COUNT_VALUE_DESERIALIZER_HPP
+#define DATA_STORE_KEY_TYPE_COUNT_VALUE_DESERIALIZER_HPP
 
 #include "utility.hpp"
 #include "key_type_count_value_defs.hpp"
@@ -22,12 +22,12 @@ namespace DataStore
 	[[nodiscard]] StatusCode read(Source&& source, Compound& val);
 
 	template<class Source, class Compound>
-	class KeyTypeCountValueReader
+	class KeyTypeCountValueDeserializer
 		{
 		public:
-			explicit KeyTypeCountValueReader(Source& src
+			explicit KeyTypeCountValueDeserializer(Source& src
 				, Compound& dest
-				, KeyTypeCountValue::KeyType key_current):
+				, KeyTypeCountValueDefs::KeyType key_current):
 				  r_source(src)
 				, r_sink(dest)
 				, m_key_current(key_current)
@@ -51,7 +51,7 @@ namespace DataStore
 			template<class T>
 			[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, StatusCode> operator()(Analib::Empty<T>)
 				{
-				KeyTypeCountValue::ArraySize size{0};
+				KeyTypeCountValueDefs::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 
@@ -83,7 +83,7 @@ namespace DataStore
 			[[nodiscard]] std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, StatusCode>
 			operator()(Analib::Empty<Sequence<Compound>>)
 				{
-				KeyTypeCountValue::ArraySize size{0};
+				KeyTypeCountValueDefs::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 				Sequence<Compound> seq;
@@ -105,14 +105,14 @@ namespace DataStore
 			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
 			operator()(Analib::Empty<Sequence<SimpleArray>>)
 				{
-				KeyTypeCountValue::ArraySize size{0};
+				KeyTypeCountValueDefs::ArraySize size{0};
 				if(unlikely(!r_source.read(size)))
 					{return StatusCode::EndOfFile;}
 				Sequence<SimpleArray> seq;
 				seq.reserve(size);
 				while(size!=0)
 					{
-					KeyTypeCountValue::ArraySize array_size{0};
+					KeyTypeCountValueDefs::ArraySize array_size{0};
 					if(unlikely(!r_source.read(array_size)))
 						{return StatusCode::EndOfFile;}
 
@@ -130,27 +130,29 @@ namespace DataStore
 		private:
 			Source& r_source;
 			Compound& r_sink;
-			KeyTypeCountValue::KeyType m_key_current;
+			KeyTypeCountValueDefs::KeyType m_key_current;
 		};
 
 	template<class Source, class Compound>
 	[[nodiscard]] StatusCode read(Source&& source, Compound& val)
 		{
-		KeyTypeCountValue::ArraySize size{0};
+		// FIXME: This function must be associated wtih KeyTypeCountValueDeserializer somehow.
+
+		KeyTypeCountValueDefs::ArraySize size{0};
 		if(unlikely(!source.read(size)))
 			{return StatusCode::EndOfFile;}
 
 		while(unlikely(size!=0))
 			{
-			KeyTypeCountValue::KeyType key;
+			KeyTypeCountValueDefs::KeyType key;
 			if(unlikely(!source.read(key)))
 				{return StatusCode::EndOfFile;}
 
-			KeyTypeCountValue::TypeId type_id;
+			KeyTypeCountValueDefs::TypeId type_id;
 			if(unlikely(!source.read(key)))
 				{return StatusCode::EndOfFile;}
 
-			auto status = Compound::SupportedTypes::select(type_id, KeyTypeCountValueReader{source, val, key});
+			auto status = Compound::SupportedTypes::select(type_id, KeyTypeCountValueDeserializer{source, val, key});
 			if(unlikely(readFailed(status)))
 				{return status;}
 

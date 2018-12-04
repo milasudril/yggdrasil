@@ -1,6 +1,6 @@
-//@	{"targets":[{"name":"key_type_count_value_writer.test","type":"application","autorun":1}]}
+//@	{"targets":[{"name":"key_type_count_value_serializer.test","type":"application","autorun":1}]}
 
-#include "key_type_count_value_writer.hpp"
+#include "key_type_count_value_serializer.hpp"
 
 #include "basic_compound.hpp"
 
@@ -19,7 +19,7 @@ struct MyExceptionPolicy
 
 	template<class T>
 	[[noreturn]]
-	static void keyAlreadyExists(DataStore::KeyTypeCountValue::KeyType key, T const& value)
+	static void keyAlreadyExists(DataStore::KeyTypeCountValueDefs::KeyType key, T const& value)
 		{throw key;}
 	};
 
@@ -90,7 +90,7 @@ struct Writer
 	Sink& r_sink;
 	};
 
-using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValue::KeyType, std::string, int>;
+using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValueDefs::KeyType, std::string, int>;
 
 Compound makeSut()
 	{
@@ -110,7 +110,7 @@ int main()
 	OutputMock output;
 	auto sut = makeSut();
 
-	sut.visitItems(DataStore::KeyTypeCountValueWriter<Compound, Writer<OutputMock>>{Writer{output}});
+	sut.visitItems(DataStore::KeyTypeCountValueSerializer<Compound, Writer<OutputMock>>{Writer{output}});
 
 	std::for_each(output.begin(), output.end(), [](auto x){putchar(static_cast<char>(x));});
 	}
