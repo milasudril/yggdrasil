@@ -57,7 +57,7 @@ int main()
 	{
 	Compound compound;
 
-	assert(DataStore::read(Reader{}, compound) == DataStore::StatusCode::Success);
+	assert(DataStore::KeyTypeCountValueDeserializer{Reader{}}(compound) == DataStore::StatusCode::Success);
 
 	printf("%zu\n", compound.childCount());
 	}
