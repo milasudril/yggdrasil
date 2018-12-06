@@ -22,13 +22,17 @@ namespace DataStore
 	class KeyTypeCountValueDeserializer
 		{
 		public:
-			KeyTypeCountValueDeserializer(Source&& source) : m_source(std::forward<Source>(source)) {}
+			KeyTypeCountValueDeserializer(Source&& source) :
+				  m_source(std::forward<Source>(source))
+				, m_depth(0)
+				{}
 
 			template<class Compound>
 			[[nodiscard]] StatusCode operator()(Compound& val);
 
 		private:
 			Source m_source;
+			size_t m_depth;
 		};
 
 
@@ -148,6 +152,22 @@ namespace DataStore
 				Compound& r_sink;
 				Deserializer& r_deserializer;
 			};
+
+		template<class T>
+		class ScopedCounter
+			{
+			public:
+				ScopedCounter(const ScopedCounter&) = delete;
+
+				explicit ScopedCounter(T& val) :r_val(val)
+					{++r_val;}
+
+				~ScopedCounter()
+					{--r_val;}
+
+			private:
+				T& r_val;
+			};
 		}
 
 
@@ -155,6 +175,11 @@ namespace DataStore
 	template<class Compound>
 	[[nodiscard]] StatusCode KeyTypeCountValueDeserializer<Source>::operator()(Compound& val)
 		{
+		if(m_depth == 128)  // Conservative value as protection from stack overflow
+			{return StatusCode::TreeTooDeep;}
+
+		detail::ScopedCounter counter(m_depth);
+
 		KeyTypeCountValueDefs::ArraySize size{0};
 		if(unlikely(!m_source.read(size)))
 			{return StatusCode::EndOfFile;}
