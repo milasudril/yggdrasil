@@ -4,6 +4,7 @@
 
 #include "basic_compound.hpp"
 #include "mem_reader.hpp"
+#include "native_decoder.hpp"
 
 #include <type_traits>
 
@@ -24,21 +25,6 @@ struct MyExceptionPolicy
 		{throw key;}
 	};
 
-template<class Source>
-struct NativeDecoder
-	{
-	template<class T>
-	std::enable_if_t<DataStore::IsPod<T>::value, bool>
-	read(T& value)
-		{return r_source.read(&value, sizeof(value)) == sizeof(value);}
-
-	template<class T>
-	std::enable_if_t<DataStore::IsPod<T>::value, bool>
-	read(T* value, size_t N)
-		{return r_source.read(value, N*sizeof(T)) == N*sizeof(T);}
-
-	Source& r_source;
-	};
 
 using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValueDefs::KeyType, std::string, int>;
 
@@ -101,7 +87,7 @@ int main()
 		, reinterpret_cast<std::byte const*>(std::end(data_le))
 		};
 
-	auto status = DataStore::KeyTypeCountValueDeserializer{NativeDecoder<DataStore::MemReader>{memReader}}(compound);
+	auto status = DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{memReader}}(compound);
 	assert(status == DataStore::StatusCode::Success);
 	assert(memReader.eof());
 
