@@ -3,10 +3,9 @@
 #ifndef DATA_STORE_MEM_READER_HPP
 #define DATA_STORE_MEM_READER_HPP
 
-#include "utility.hpp"
-
 #include <cstring>
 #include <algorithm>
+#include <cstddef>
 
 namespace DataStore
 	{
