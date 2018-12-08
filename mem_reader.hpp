@@ -26,6 +26,9 @@ namespace DataStore
 				return N;
 				}
 
+			[[nodiscard]] bool eof() const
+				{return m_size == 0;}
+
 		private:
 			std::byte const* r_read_offset;
 			size_t m_size;

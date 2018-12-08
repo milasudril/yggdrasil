@@ -74,9 +74,8 @@ namespace DataStore
 					if(unlikely(!r_source.read(size)))
 						{return StatusCode::EndOfFile;}
 
-					T val{};
-					val.reserve(size);
-
+					T val;
+					val.resize(size);
 					if(unlikely(!r_source.read(val.data(), size)))
 						{return StatusCode::EndOfFile;}
 
@@ -101,7 +100,7 @@ namespace DataStore
 							{return StatusCode::EndOfFile;}
 
 						SimpleArray val;
-						val.reserve(array_size);
+						val.resize(array_size);
 						if(unlikely(!r_source.read(val.data(), val.size())))
 							{return StatusCode::EndOfFile;}
 						seq.push_back(std::move(val));
@@ -191,7 +190,7 @@ namespace DataStore
 				{return StatusCode::EndOfFile;}
 
 			KeyTypeCountValueDefs::TypeId type_id;
-			if(unlikely(!m_source.read(key)))
+			if(unlikely(!m_source.read(type_id)))
 				{return StatusCode::EndOfFile;}
 
 			auto status = Compound::SupportedTypes::select(type_id
