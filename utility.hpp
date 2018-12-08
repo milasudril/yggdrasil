@@ -27,11 +27,17 @@ namespace DataStore
 	struct IsSimpleArray : std::false_type{};
 
 	template<class T>
+	struct IsPod
+		{
+		static constexpr auto value = std::is_trivial_v<T> && std::is_standard_layout_v<T>;
+		};
+
+	template<class T>
 	struct IsSimpleArray<T, std::enable_if_t<HasData<T>::value>>
 		{
 		static constexpr auto value =
 			   HasSize<T>::value && HasData<T>::value
-			&& std::is_arithmetic_v<std::decay_t<decltype(*std::declval<T>().data())>>;
+			&& IsPod<std::decay_t<decltype(*std::declval<T>().data())>>::value;
 		};
 
 

@@ -56,7 +56,7 @@ namespace DataStore
 					{return StatusCode::UnknownType;}
 
 				template<class T>
-				[[nodiscard]] std::enable_if_t<std::is_arithmetic_v<T>, StatusCode> operator()(Analib::Empty<T>)
+				[[nodiscard]] std::enable_if_t<IsPod<T>::value, StatusCode> operator()(Analib::Empty<T>)
 					{
 					T ret{};
 					if(unlikely(!r_source.read(ret)))
