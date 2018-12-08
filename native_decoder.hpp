@@ -16,12 +16,14 @@ namespace DataStore
 			constexpr explicit NativeDecoder(Source& source) : r_source(source) {}
 
 			template<class T>
+			[[nodiscard]]
 			constexpr
 			std::enable_if_t<DataStore::IsPod<T>::value, bool>
 			read(T& value)
 				{return r_source.read(&value, sizeof(value)) == sizeof(value);}
 
 			template<class T>
+			[[nodiscard]]
 			constexpr
 			std::enable_if_t<DataStore::IsPod<T>::value, bool>
 			read(T* value, size_t N)

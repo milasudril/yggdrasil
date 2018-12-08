@@ -3,6 +3,7 @@
 #include "key_type_count_value_serializer.hpp"
 
 #include "basic_compound.hpp"
+#include "mem_writer.hpp"
 
 #include <type_traits>
 
@@ -21,32 +22,6 @@ struct MyExceptionPolicy
 	[[noreturn]]
 	static void keyAlreadyExists(DataStore::KeyTypeCountValueDefs::KeyType key, T const& value)
 		{throw key;}
-	};
-
-#include <iostream>
-
-class OutputMock
-	{
-	public:
-		void write(void const* buffer, size_t count)
-			{
-			auto bytes = reinterpret_cast<std::byte const*>(buffer);
-			while(count!=0)
-				{
-				m_buffer.push_back(*bytes);
-				++bytes;
-				--count;
-				}
-			}
-
-		auto begin() const
-			{return m_buffer.begin();}
-
-		auto end() const
-			{return m_buffer.end();}
-
-	private:
-		std::vector<std::byte> m_buffer;
 	};
 
 template<class Sink>
@@ -107,10 +82,10 @@ Compound makeSut()
 
 int main()
 	{
-	OutputMock output;
 	auto sut = makeSut();
+	std::vector<std::byte> output_buffer;
+	DataStore::MemWriter writer{output_buffer};
+	sut.visitItems(DataStore::KeyTypeCountValueSerializer<Compound, Writer<DataStore::MemWriter>>{Writer{writer}});
 
-	sut.visitItems(DataStore::KeyTypeCountValueSerializer<Compound, Writer<OutputMock>>{Writer{output}});
-
-	std::for_each(output.begin(), output.end(), [](auto x){putchar(static_cast<char>(x));});
+	std::for_each(output_buffer.begin(), output_buffer.end(), [](auto x){putchar(static_cast<char>(x));});
 	}
