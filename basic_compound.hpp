@@ -83,8 +83,12 @@ namespace DataStore
 
 
 			template<class T>
-			BasicCompound& insert(key_type&& key, T&& value)
+			BasicCompound& insert(key_type&& key, T&& value) &
 				{return insert_impl(std::move(key), std::forward<T>(value));}
+
+			template<class T>
+			BasicCompound&& insert(key_type&& key, T&& value) &&
+				{return std::move(insert_impl(std::move(key), std::forward<T>(value)));}
 
 			template<class T>
 			BasicCompound& insert(key_type const& key, T&& value)

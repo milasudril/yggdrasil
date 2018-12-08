@@ -58,7 +58,7 @@ namespace Test
 		,Compound::SupportedTypes::getTypeIndex<std::vector<Compound>>()
 		,2, 0, 0, 0
 		,1 ,0 ,0 ,0
-		,'B','0', '1', 0, 0, 0, 0, 0
+		,'b','0', '1', 0, 0, 0, 0, 0
 		,0,  0, 0, 0, 0, 0, 0, 0
 		,0,  0, 0, 0, 0, 0, 0, 0
 		,0,  0, 0, 0, 0, 0, 0, 0
@@ -78,6 +78,23 @@ namespace Test
 		};
 
 	static_assert(data_le[sizeof(DataStore::KeyTypeCountValueDefs::KeyType) + sizeof(DataStore::KeyTypeCountValueDefs::ArraySize) ]==Compound::SupportedTypes::getTypeIndex<Compound>());
+
+	Compound createTestCompound()
+		{
+		std::vector<Compound> B;
+		B.push_back(Compound{}.insert(DataStore::KeyTypeCountValueDefs::KeyType{"b01"}, 0x4030202));
+		B.push_back(Compound{});
+		std::vector<std::string> C{"Hello", "World"};
+
+		Compound ret;
+		ret.insert(DataStore::KeyTypeCountValueDefs::KeyType{"A"}, Compound{}
+				.insert(DataStore::KeyTypeCountValueDefs::KeyType{"a1"}, 0x4030201)
+				.insert(DataStore::KeyTypeCountValueDefs::KeyType{"a2"}, std::string("Foobar")))
+			.insert(DataStore::KeyTypeCountValueDefs::KeyType{"B"}, std::move(B))
+			.insert(DataStore::KeyTypeCountValueDefs::KeyType{"C"}, std::move(C));
+
+		return ret;
+		}
 	}
 
 #endif
