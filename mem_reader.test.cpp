@@ -11,8 +11,8 @@
 
 int main()
 	{
-	std::minstd_rand randgen;
-	auto random_bytes = Test::getRandomData(randgen, 1.0);
+	std::minstd_rand randgen(time(0));
+	auto random_bytes = Test::getRandomData(randgen, 1.0/16.0);
 
 	DataStore::MemReader reader{random_bytes.data(), random_bytes.data() + random_bytes.size()};
 
