@@ -5,6 +5,8 @@
 
 #include "utility.hpp"
 
+#include <type_traits>
+
 namespace DataStore
 	{
 	template<class Source>
@@ -23,7 +25,10 @@ namespace DataStore
 			constexpr
 			std::enable_if_t<DataStore::IsPod<T>::value, bool>
 			read(T* value, size_t N)
-				{return r_source.read(value, N*sizeof(T)) == N*sizeof(T);}
+				{
+				constexpr auto elem_size = sizeof(T);
+				return r_source.read(value, N*elem_size) == N*elem_size;
+				}
 
 		private:
 			Source& r_source;
