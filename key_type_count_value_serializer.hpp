@@ -19,61 +19,78 @@ namespace DataStore
 			using SupportedTypes = typename Compound::SupportedTypes;
 
 			template<class Value>
-			std::enable_if_t<std::is_arithmetic_v<Value>> operator()(KeyTypeCountValueDefs::KeyType key, Value item)
+			std::enable_if_t<IsPod<Value>::value, bool> operator()(KeyTypeCountValueDefs::KeyType key, Value item)
 				{
 				writeHeader<Value>(key);
-				m_sink.write(item);
+				return m_sink.write(item);
 				}
 
 			template<class Value>
-			std::enable_if_t<IsSimpleArray<Value>::value> operator()(KeyTypeCountValueDefs::KeyType key, Value const& item)
+			std::enable_if_t<IsSimpleArray<Value>::value, bool> operator()(KeyTypeCountValueDefs::KeyType key
+				, Value const& item)
 				{
-				writeHeader<Value>(key);
-				m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()))
-					.write(item.data(), item.size());
+				if(unlikely(!writeHeader<Value>(key)))
+					{return false;}
+
+				if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()))))
+					{return false;}
+
+				return m_sink.write(item.data(), item.size());
 				}
 
-			void operator()(KeyTypeCountValueDefs::KeyType key, Compound const& item)
+			bool operator()(KeyTypeCountValueDefs::KeyType key, Compound const& item)
 				{
-				writeHeader<Compound>(key);
-				m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.childCount()));
-				item.visitItems(*this);
+				if(unlikely(!writeHeader<Compound>(key)))
+					{return false;}
+				if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.childCount()))))
+					{return false;}
+				return item.visitItems(*this);
 				}
 
 			template<template<class> class Sequence>
-			std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value>
+			std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, bool>
 			operator()(KeyTypeCountValueDefs::KeyType key, Sequence<Compound> const& item)
 				{
-				writeHeader<Sequence<Compound>>(key);
-				m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()));
-				std::for_each(item.begin(), item.end(), [*this](auto const& val) mutable
+				if(unlikely(!writeHeader<Sequence<Compound>>(key)))
+					{return false;}
+
+				if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()))))
+					{return false;}
+
+				return std::find_if_not(item.begin(), item.end(), [*this](auto const& val) mutable
 					{
-					m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(val.childCount()));
-					val.visitItems(*this);
-					});
+					if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(val.childCount()))))
+						{return false;}
+					return val.visitItems(*this);
+					}) == item.end();
 				}
 
 			template<template<class> class Sequence, class SimpleArray>
-			std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value>
+			std::enable_if_t<IsSimpleArray<SimpleArray>::value
+				&& IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, bool>
 			operator()(KeyTypeCountValueDefs::KeyType key, Sequence<SimpleArray> const& item)
 				{
-				writeHeader<Sequence<SimpleArray>>(key);
-				m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()));
-				std::for_each(item.begin(), item.end(), [this](SimpleArray const& value)
+				if(unlikely(!writeHeader<Sequence<SimpleArray>>(key)))
+					{return false;}
+				if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()))))
+					{return false;}
+				return std::find_if_not(item.begin(), item.end(), [this](SimpleArray const& value)
 					{
-					m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(value.size()))
-						.write(value.data(), value.size());
-					});
+					if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(value.size()))))
+						{return false;}
+					return m_sink.write(value.data(), value.size());
+					}) == item.end();
 				}
 
 		private:
 			template<class Value>
-			void writeHeader(KeyTypeCountValueDefs::KeyType key)
+			bool writeHeader(KeyTypeCountValueDefs::KeyType key)
 				{
 				auto type_id = KeyTypeCountValueDefs::TypeId::create<SupportedTypes::template getTypeIndex<Value>()>();
 
-				m_sink.write(key)
-					.write(type_id);
+				if(unlikely(!m_sink.write(key)))
+					{return false;}
+				return m_sink.write(type_id);
 				}
 
 			Writer m_sink;

@@ -106,7 +106,7 @@ namespace DataStore
 				{return m_content.size();}
 
 			template<class ItemVisitor>
-			void visitItems(ItemVisitor&& visitor) const;
+			bool visitItems(ItemVisitor&& visitor) const;
 
 			template<class KeyLike>
 			bool erase(KeyLike const& key)
@@ -162,15 +162,15 @@ namespace DataStore
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	template<class NodeVisitor>
-	void BasicCompound<ExceptionPolicy, KeyType, Types...>::visitItems(NodeVisitor&& visitor) const
+	bool BasicCompound<ExceptionPolicy, KeyType, Types...>::visitItems(NodeVisitor&& visitor) const
 		{
-		std::for_each(m_content.begin(), m_content.end(), [&visitor](auto const& item)
+		return std::find_if_not(m_content.begin(), m_content.end(), [&visitor](auto const& item)
 			{
-			std::visit([&item, &visitor](auto const& val)
+			return std::visit([&item, &visitor](auto const& val)
 				{
-				visitor(item.first, val.get());
+				return visitor(item.first, val.get());
 				}, item.second);
-			});
+			}) == m_content.end();
 		}
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>

@@ -45,10 +45,11 @@ STIC_TESTCASE("childCount")
 	auto sut = makeSut();
 	auto const n_children_ref = sut.childCount();
 	std::remove_const_t<decltype(n_children_ref)> n_children_counted{0};
-	sut.visitItems([&n_children_counted](auto const&, auto const&)
+	STIC_ASSERT(sut.visitItems([&n_children_counted](auto const&, auto const&)
 		{
 		++n_children_counted;
-		});
+		return true;
+		}));
 
 	STIC_ASSERT(n_children_counted == n_children_ref);
 	}

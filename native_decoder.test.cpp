@@ -3,9 +3,6 @@
 #include "native_decoder.hpp"
 #include <cassert>
 
-#include <cstdio>
-
-
 class Source
 	{
 	public:
