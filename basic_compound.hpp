@@ -297,18 +297,18 @@ namespace DataStore
 
 
 	template<class ExceptionPolicy, class KeyType, class... Types, class Serializer>
-	[[nodiscard]] auto store(BasicCompound<ExceptionPolicy, KeyType, Types...> const& val, Serializer&& serializer)
+	[[nodiscard]] inline auto store(BasicCompound<ExceptionPolicy, KeyType, Types...> const& val, Serializer&& serializer)
 		{return serializer(val);}
 
 	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
-	[[nodiscard]] auto load(BasicCompound<ExceptionPolicy, KeyType, Types...>& val, Deserializer&& deserializer)
+	[[nodiscard]] inline auto load(BasicCompound<ExceptionPolicy, KeyType, Types...>& val, Deserializer&& deserializer)
 		{return deserializer(val);}
 
-	bool readFailed(bool val)
+	[[nodiscard]] inline bool readFailed(bool val)
 		{return !val;}
 
 	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
-	[[nodiscard]] auto load(Analib::Empty<BasicCompound<ExceptionPolicy, KeyType, Types...>>, Deserializer&& deserializer)
+	[[nodiscard]] inline auto load(Analib::Empty<BasicCompound<ExceptionPolicy, KeyType, Types...>>, Deserializer&& deserializer)
 		{
 		BasicCompound<ExceptionPolicy, KeyType, Types...> ret;
 		auto status = deserializer(ret);
