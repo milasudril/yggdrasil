@@ -52,6 +52,33 @@ namespace DataStore
 			T m_value;
 		};
 
+	template<class T>
+	bool operator==(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return a.get() == b.get();}
+
+	template<class T>
+	bool operator!=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return !(a == b);}
+
+	template<class T>
+	bool operator<(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return a.get() < b.get();}
+
+	template<class T>
+	bool operator>(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return b < a;}
+
+	template<class T>
+	bool operator<=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return !(a > b);}
+
+		template<class T>
+	bool operator>=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+		{return !(a < a);}
+
+
+
+
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	class BasicCompound
 		{
@@ -118,6 +145,12 @@ namespace DataStore
 
 			void clear()
 				{m_content.clear();}
+
+			bool operator==(BasicCompound const& other) const
+				{return m_content == other.m_content;}
+
+			bool operator!=(BasicCompound const& other) const
+				{return m_content != other.m_content;}
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
