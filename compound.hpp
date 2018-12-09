@@ -1,13 +1,15 @@
-//@	{"targets":[{"name":"compound.hpp","type":"include"}]}
+//@	{"targets":[{"name":"compound.hpp","type":"include", "pkgconfig_libs":["IlmBase"]}]}
 
 #ifndef YGGDRASIL_COMPOUND_HPP
 #define YGGDRASIL_COMPOUND_HPP
 
 #include "basic_compound.hpp"
+#include "key_type_count_value_defs.hpp"
 #include "analib/cxxstring/string.hpp"
-#include "analib/inlinestring/inlinestring.hpp"
 
+#include <OpenEXR/half.h>
 #include <cstdint>
+#include <cstddef>
 
 namespace Yggdrasil
 	{
@@ -15,7 +17,7 @@ namespace Yggdrasil
 	using vec4_t __attribute__((vector_size(4*sizeof(T)))) = T ;
 
 	using String = Analib::StringNoSso;
-	using KeyType = Analib::InlineString<char, 16>;
+	using KeyType = DataStore::KeyTypeCountValueDefs::KeyType;
 
 
 	template<class ExceptionPolicy>
@@ -35,68 +37,26 @@ namespace Yggdrasil
 		,uint64_t
 
 		// Floats
-		//TODO (maybe decode will unpack to float: ,half
+		,half
 		,float
 		,double
 
-
+		// Vector types
+		,vec4_t<int8_t>
+		,vec4_t<uint8_t>
+		,vec4_t<int16_t>
+		,vec4_t<uint16_t>
 		,vec4_t<int32_t>
 		,vec4_t<uint32_t>
+		,vec4_t<int64_t>
+		,vec4_t<uint64_t>
+//TODO (Requires emulation, no arithmetic needed though):,vec4_t<half>
 		,vec4_t<float>
-		// Skip vectorized double as it is not as widely supported as vectorized float
+		,vec4_t<double>
+
 		,String
+		,std::byte
 		>;
-
-	enum class TypeId : intptr_t
-		{
-		 Unkonwn
-
-		// Basic integer types
-		,Int8
-		,Uint8
-		,Int16
-		,Uint16
-		,Int32
-		,Uint32
-		,Int64
-		,Uint64
-
-		// Floats
-		// TODO:, Float16
-		,Float32
-		,Float64
-
-		// Vector types
-		,VecInt32
-		,VecUint32
-		,VecFloat32
-
-		// Other
-		, String
-		, Compound
-
-
-		// The same list for arrays
-		,ArrayInt8
-		,ArrayUint8
-		,ArrayInt16
-		,ArrayUint16
-		,ArrayInt32
-		,ArrayUint32
-		,ArrayInt64
-		,ArrayUint64
-
-		// TODO:, Float16
-		,ArrayFloat32
-		,ArrayFloat64
-
-		,ArrayVecInt32
-		,ArrayVecUint32
-		,ArrayVecFloat32
-
-		,ArrayString
-		,ArrayCompound
-		};
 	}
 
 #endif
