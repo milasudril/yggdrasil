@@ -16,7 +16,7 @@ int main()
 		};
 
 	auto status = DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{memReader}}(compound);
-	assert(status == DataStore::StatusCode::Success);
+	assert(status == DataStore::KeyTypeCountValueDefs::StatusCode::Success);
 	assert(memReader.eof());
 
 	assert(compound == Test::createTestCompound());

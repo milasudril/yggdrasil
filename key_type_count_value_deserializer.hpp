@@ -13,11 +13,6 @@
 
 namespace DataStore
 	{
-	enum class StatusCode:int{Success, UnknownType, EndOfFile, TreeTooDeep};
-
-	[[nodiscard]] inline bool readFailed(StatusCode code)
-		{return code!=StatusCode::Success;}
-
 	template<class Source>
 	class KeyTypeCountValueDeserializer
 		{
@@ -28,13 +23,12 @@ namespace DataStore
 				{}
 
 			template<class Compound>
-			[[nodiscard]] StatusCode operator()(Compound& val);
+			[[nodiscard]] KeyTypeCountValueDefs::StatusCode operator()(Compound& val);
 
 		private:
 			Source m_source;
 			size_t m_depth;
 		};
-
 
 	namespace detail
 		{
@@ -53,64 +47,65 @@ namespace DataStore
 					{}
 
 				[[nodiscard]] constexpr auto operator()()
-					{return StatusCode::UnknownType;}
+					{return KeyTypeCountValueDefs::StatusCode::UnknownType;}
 
 				template<class T>
-				[[nodiscard]] std::enable_if_t<IsPod<T>::value, StatusCode> operator()(Analib::Empty<T>)
+				[[nodiscard]] std::enable_if_t<IsPod<T>::value, KeyTypeCountValueDefs::StatusCode> operator()(Analib::Empty<T>)
 					{
 					T ret{};
 					if(unlikely(!r_source.read(ret)))
-						{return StatusCode::EndOfFile;}
+						{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 					r_sink.insert(m_key_current, std::move(ret));
 
-					return StatusCode::Success;
+					return KeyTypeCountValueDefs::StatusCode::Success;
 					}
 
 				template<class T>
-				[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, StatusCode> operator()(Analib::Empty<T>)
+				[[nodiscard]] std::enable_if_t<IsSimpleArray<T>::value, KeyTypeCountValueDefs::StatusCode> operator()(Analib::Empty<T>)
 					{
 					KeyTypeCountValueDefs::ArraySize size{0};
 					if(unlikely(!r_source.read(size)))
-						{return StatusCode::EndOfFile;}
+						{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 					T val;
 					val.resize(size);
 					if(unlikely(!r_source.read(val.data(), size)))
-						{return StatusCode::EndOfFile;}
+						{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 					r_sink.insert(m_key_current, std::move(val));
 
-					return StatusCode::Success;
+					return KeyTypeCountValueDefs::StatusCode::Success;
 					}
 
 				template<template<class> class Sequence, class SimpleArray>
-				std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, StatusCode>
+				std::enable_if_t<IsSimpleArray<SimpleArray>::value && IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value
+					, KeyTypeCountValueDefs::StatusCode>
 				operator()(Analib::Empty<Sequence<SimpleArray>>)
 					{
 					KeyTypeCountValueDefs::ArraySize size{0};
 					if(unlikely(!r_source.read(size)))
-						{return StatusCode::EndOfFile;}
+						{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 					Sequence<SimpleArray> seq;
 					seq.reserve(size);
 					while(size != 0)
 						{
 						KeyTypeCountValueDefs::ArraySize array_size{0};
 						if(unlikely(!r_source.read(array_size)))
-							{return StatusCode::EndOfFile;}
+							{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 						SimpleArray val;
 						val.resize(array_size);
 						if(unlikely(!r_source.read(val.data(), val.size())))
-							{return StatusCode::EndOfFile;}
+							{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 						seq.push_back(std::move(val));
 						--size;
 						}
 					r_sink.insert(m_key_current, std::move(seq));
-					return StatusCode::Success;
+					return KeyTypeCountValueDefs::StatusCode::Success;
 					}
 
-				[[nodiscard]] StatusCode operator()(Analib::Empty<Compound>)
+				[[nodiscard]] KeyTypeCountValueDefs::StatusCode operator()(Analib::Empty<Compound>)
 					{
 					Compound val;
 					auto result = r_deserializer(val);
@@ -124,12 +119,13 @@ namespace DataStore
 
 
 				template<template<class> class Sequence>
-				[[nodiscard]] std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, StatusCode>
+				[[nodiscard]] std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value
+					, KeyTypeCountValueDefs::StatusCode>
 				operator()(Analib::Empty<Sequence<Compound>>)
 					{
 					KeyTypeCountValueDefs::ArraySize size{0};
 					if(unlikely(!r_source.read(size)))
-						{return StatusCode::EndOfFile;}
+						{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 					Sequence<Compound> seq;
 					seq.reserve(size);
 					while(size != 0)
@@ -142,7 +138,7 @@ namespace DataStore
 						--size;
 						}
 					r_sink.insert(m_key_current, std::move(seq));
-					return StatusCode::Success;
+					return KeyTypeCountValueDefs::StatusCode::Success;
 					}
 
 			private:
@@ -172,26 +168,26 @@ namespace DataStore
 
 	template<class Source>
 	template<class Compound>
-	[[nodiscard]] StatusCode KeyTypeCountValueDeserializer<Source>::operator()(Compound& val)
+	[[nodiscard]] KeyTypeCountValueDefs::StatusCode KeyTypeCountValueDeserializer<Source>::operator()(Compound& val)
 		{
 		if(m_depth == 128)  // Conservative value as protection from stack overflow
-			{return StatusCode::TreeTooDeep;}
+			{return KeyTypeCountValueDefs::StatusCode::TreeTooDeep;}
 
 		detail::ScopedCounter counter(m_depth);
 
 		KeyTypeCountValueDefs::ArraySize size{0};
 		if(unlikely(!m_source.read(size)))
-			{return StatusCode::EndOfFile;}
+			{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 		while(unlikely(size != 0))
 			{
 			KeyTypeCountValueDefs::KeyType key;
 			if(unlikely(!m_source.read(key)))
-				{return StatusCode::EndOfFile;}
+				{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 			KeyTypeCountValueDefs::TypeId type_id;
 			if(unlikely(!m_source.read(type_id)))
-				{return StatusCode::EndOfFile;}
+				{return KeyTypeCountValueDefs::StatusCode::EndOfFile;}
 
 			auto status = Compound::SupportedTypes::select(type_id
 				, detail::KeyTypeCountValueDeserializerSelector{m_source, key, val, *this});
@@ -201,7 +197,7 @@ namespace DataStore
 			--size;
 			}
 
-		return StatusCode::Success;
+		return KeyTypeCountValueDefs::StatusCode::Success;
 		}
 	}
 
