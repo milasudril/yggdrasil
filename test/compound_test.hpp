@@ -24,6 +24,11 @@ namespace Test
 		[[noreturn]]
 		static void keyAlreadyExists(DataStore::KeyTypeCountValueDefs::KeyType key, T const& value)
 			{throw key;}
+
+		template<class StatusCode, class Deserializer>
+		[[noreturn]]
+		static void readError(StatusCode status, Deserializer&&)
+			{throw status;}
 		};
 
 

@@ -96,16 +96,16 @@ namespace DataStore
 			using SupportedTypes = Analib::TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, std::vector<Types>...>;
 
 			template<class T, class KeyLike>
-			T& get(KeyLike const& key)
+			[[nodiscard]] T& get(KeyLike const& key)
 				{return const_cast<T&>(const_cast<BasicCompound const*>(this)->get<T>(key));}
 
 
 			template<class T, class KeyLike>
-			T const& get(KeyLike const& key) const;
+			[[nodiscard]] T const& get(KeyLike const& key) const;
 
 
 			template<class KeyLike>
-			bool contains(KeyLike const& key) const
+			[[nodiscard]] bool contains(KeyLike const& key) const
 				{return m_content.find(key) != m_content.end();}
 
 
@@ -114,7 +114,7 @@ namespace DataStore
 				{return insert_impl(std::move(key), std::forward<T>(value));}
 
 			template<class T>
-			BasicCompound&& insert(key_type&& key, T&& value) &&
+			[[nodiscard]] BasicCompound&& insert(key_type&& key, T&& value) &&
 				{return std::move(insert_impl(std::move(key), std::forward<T>(value)));}
 
 			template<class T>
@@ -133,7 +133,7 @@ namespace DataStore
 			BasicCompound& insertOrReplace(key_type const& key, T&& value)
 				{return insertOrReplace(key_type{key}, std::forward<T>(value));}
 
-			size_t childCount() const
+			[[nodiscard]] size_t childCount() const
 				{return m_content.size();}
 
 			template<class ItemVisitor>
@@ -146,10 +146,10 @@ namespace DataStore
 			void clear()
 				{m_content.clear();}
 
-			bool operator==(BasicCompound const& other) const
+			[[nodiscard]] bool operator==(BasicCompound const& other) const
 				{return m_content == other.m_content;}
 
-			bool operator!=(BasicCompound const& other) const
+			[[nodiscard]] bool operator!=(BasicCompound const& other) const
 				{return m_content != other.m_content;}
 
 		private:
@@ -163,7 +163,7 @@ namespace DataStore
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	template<class T, class KeyLike>
-	T const& BasicCompound<ExceptionPolicy, KeyType, Types...>::get(KeyLike const& key) const
+	[[nodiscard]] T const& BasicCompound<ExceptionPolicy, KeyType, Types...>::get(KeyLike const& key) const
 		{
 		auto i = m_content.find(key);
 		if(i != m_content.end())  // Use this style to trigger warning about noreturn
@@ -180,7 +180,8 @@ namespace DataStore
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	template<class T>
-	BasicCompound<ExceptionPolicy, KeyType, Types...>& BasicCompound<ExceptionPolicy, KeyType, Types...>::insert_impl(key_type&& key, T&& value)
+	[[nodiscard]] BasicCompound<ExceptionPolicy, KeyType, Types...>& BasicCompound<ExceptionPolicy, KeyType, Types...>::insert_impl
+		(key_type&& key, T&& value)
 		{
 		auto i = m_content.find(key);
 		if(i == m_content.end())
@@ -211,36 +212,37 @@ namespace DataStore
 		}
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
-	T& get(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
+	[[nodiscard]] T& get(BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{return compound.template get<T>(head);}
 
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class ... Path>
-	T& get(BasicCompound<ExceptionPolicy, Types...>& compound, KeyLike const& head, Path ... path)
+	[[nodiscard]] T& get(BasicCompound<ExceptionPolicy, Types...>& compound, KeyLike const& head, Path ... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		return get<T>(next, path...);
 		}
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
-	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
+	[[nodiscard]] T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
 		{return compound.template get<T>(head);}
 
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class ... Path>
-	T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head, Path ... path)
+	[[nodiscard]] T const& get(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head
+		, Path ... path)
 		{
 		auto const& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		return get<T>(next, path...);
 		}
 
 	template<class ExceptionPolicy, class KeyType, class ... Types, class KeyLike>
-	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
+	[[nodiscard]] bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head)
 		{return compound.contains(head);}
 
 
 	template<class ExceptionPolicy, class KeyType, class ... Types, class KeyLike, class ... Path>
-	bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head, Path ... path)
+	[[nodiscard]] bool contains(BasicCompound<ExceptionPolicy, KeyType, Types...> const& compound, KeyLike const& head, Path ... path)
 		{
 		if(!contains(compound, head))
 			{return false;}
@@ -263,10 +265,14 @@ namespace DataStore
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
 	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
-		{compound.template insert<T>(typename BasicCompound<ExceptionPolicy, KeyType, Types...>::key_type{head}, std::forward<T>(value));}
+		{
+		compound.template insert<T>(typename BasicCompound<ExceptionPolicy, KeyType, Types...>::key_type{head}
+			, std::forward<T>(value));
+		}
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class... Path>
-	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head, Path... path)
+	void insert(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head
+		, Path... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		insert(std::forward<T>(value), next, path...);
@@ -274,13 +280,40 @@ namespace DataStore
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
 	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
-		{compound.template insertOrReplace<T>(typename BasicCompound<ExceptionPolicy, Types...>::key_type{head}, std::forward<T>(value));}
+		{
+		compound.template insertOrReplace<T>(typename BasicCompound<ExceptionPolicy, Types...>::key_type{head}
+			, std::forward<T>(value));
+		}
 
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike, class... Path>
-	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head, Path... path)
+	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head
+		, Path... path)
 		{
 		auto& next = get<BasicCompound<ExceptionPolicy, KeyType, Types...>>(compound, head);
 		insertOrReplace(std::forward<T>(value), next, path...);
+		}
+
+
+
+	template<class ExceptionPolicy, class KeyType, class... Types, class Serializer>
+	[[nodiscard]] auto store(BasicCompound<ExceptionPolicy, KeyType, Types...> const& val, Serializer&& serializer)
+		{return serializer(val);}
+
+	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
+	[[nodiscard]] auto load(BasicCompound<ExceptionPolicy, KeyType, Types...>& val, Deserializer&& deserializer)
+		{return deserializer(val);}
+
+	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
+	[[nodiscard]] BasicCompound<ExceptionPolicy, KeyType, Types...> load(Deserializer&& deserializer)
+		{
+		BasicCompound<ExceptionPolicy, KeyType, Types...> ret;
+		auto status = deserializer(ret);
+		if(unlikely(readFailed(status, std::forward<Deserializer>(deserializer))))
+			{
+			ExceptionPolicy::readError(status);
+			assert(false);
+			}
+		return ret;
 		}
 	}
 
