@@ -15,11 +15,7 @@ int main()
 	std::vector<std::byte> output_buffer;
 	DataStore::MemWriter writer{output_buffer};
 
-	DataStore::NativeEncoder encoder(writer);
-
-	assert(encoder.write(static_cast<DataStore::KeyTypeCountValueDefs::ArraySize>( compound.childCount())));
-	assert(compound.visitItems(DataStore::KeyTypeCountValueSerializer
-		<Test::Compound, DataStore::NativeEncoder<DataStore::MemWriter>>{DataStore::NativeEncoder{writer}}));
+	assert(DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{writer}}(compound));
 
 	assert(output_buffer.size() == sizeof(Test::data_le));
 	assert(std::equal(std::begin(output_buffer), std::end(output_buffer)
