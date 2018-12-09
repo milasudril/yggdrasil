@@ -3,6 +3,7 @@
 #ifndef DATA_STORE_BASIC_COMPOUND_HPP
 #define DATA_STORE_BASIC_COMPOUND_HPP
 
+#include "utility.hpp"
 #include "analib/typeset/type_set.hpp"
 
 #include <variant>
@@ -53,27 +54,27 @@ namespace DataStore
 		};
 
 	template<class T>
-	bool operator==(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	[[nodiscard]] bool operator==(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return a.get() == b.get();}
 
 	template<class T>
-	bool operator!=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	[[nodiscard]] bool operator!=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return !(a == b);}
 
 	template<class T>
-	bool operator<(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	[[nodiscard]] bool operator<(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return a.get() < b.get();}
 
 	template<class T>
-	bool operator>(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	[[nodiscard]] bool operator>(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return b < a;}
 
 	template<class T>
-	bool operator<=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	[[nodiscard]] bool operator<=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return !(a > b);}
 
-		template<class T>
-	bool operator>=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
+	template<class T>
+	[[nodiscard]] bool operator>=(ValueWrapper<T> const& a, ValueWrapper<T> const& b)
 		{return !(a < a);}
 
 
@@ -281,7 +282,7 @@ namespace DataStore
 	template<class T, class ExceptionPolicy, class KeyType, class... Types, class KeyLike>
 	void insertOrReplace(T&& value, BasicCompound<ExceptionPolicy, KeyType, Types...>& compound, KeyLike const& head)
 		{
-		compound.template insertOrReplace<T>(typename BasicCompound<ExceptionPolicy, Types...>::key_type{head}
+		compound.template insertOrReplace<T>(typename BasicCompound<ExceptionPolicy, KeyType, Types...>::key_type{head}
 			, std::forward<T>(value));
 		}
 
@@ -303,14 +304,17 @@ namespace DataStore
 	[[nodiscard]] auto load(BasicCompound<ExceptionPolicy, KeyType, Types...>& val, Deserializer&& deserializer)
 		{return deserializer(val);}
 
+	bool readFailed(bool val)
+		{return !val;}
+
 	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
-	[[nodiscard]] BasicCompound<ExceptionPolicy, KeyType, Types...> load(Deserializer&& deserializer)
+	[[nodiscard]] auto load(Analib::Empty<BasicCompound<ExceptionPolicy, KeyType, Types...>>, Deserializer&& deserializer)
 		{
 		BasicCompound<ExceptionPolicy, KeyType, Types...> ret;
 		auto status = deserializer(ret);
-		if(unlikely(readFailed(status, std::forward<Deserializer>(deserializer))))
+		if(unlikely(readFailed(status)))
 			{
-			ExceptionPolicy::readError(status);
+			ExceptionPolicy::readError(status,  std::forward<Deserializer>(deserializer));
 			assert(false);
 			}
 		return ret;

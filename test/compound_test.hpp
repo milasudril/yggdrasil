@@ -4,25 +4,29 @@
 #define COMPOUND_TEST_H
 
 #include "basic_compound.hpp"
+#include "key_type_count_value_defs.hpp"
 #include <string>
 #include <vector>
 
 namespace Test
 	{
+	using KeyType = DataStore::KeyTypeCountValueDefs::KeyType;
+	using ArraySize = DataStore::KeyTypeCountValueDefs::KeyType;
+
 	struct MyExceptionPolicy
 		{
 		[[noreturn]]
-		static void keyNotFound(DataStore::KeyTypeCountValueDefs::KeyType key)
+		static void keyNotFound(KeyType key)
 			{throw key;}
 
 		template<class T>
 		[[noreturn]]
-		static void keyValueHasWrongType(DataStore::KeyTypeCountValueDefs::KeyType key, size_t actualType)
+		static void keyValueHasWrongType(KeyType key, size_t actualType)
 			{throw key;}
 
 		template<class T>
 		[[noreturn]]
-		static void keyAlreadyExists(DataStore::KeyTypeCountValueDefs::KeyType key, T const& value)
+		static void keyAlreadyExists(KeyType key, T const& value)
 			{throw key;}
 
 		template<class StatusCode, class Deserializer>
@@ -32,7 +36,7 @@ namespace Test
 		};
 
 
-	using Compound = DataStore::BasicCompound<MyExceptionPolicy, DataStore::KeyTypeCountValueDefs::KeyType, std::string, int>;
+	using Compound = DataStore::BasicCompound<MyExceptionPolicy, KeyType, std::string, int>;
 
 	constexpr uint8_t data_le[]=
 		{
@@ -82,21 +86,21 @@ namespace Test
 		,'W','o','r','l','d'
 		};
 
-	static_assert(data_le[sizeof(DataStore::KeyTypeCountValueDefs::KeyType) + sizeof(DataStore::KeyTypeCountValueDefs::ArraySize) ]==Compound::SupportedTypes::getTypeIndex<Compound>());
+	static_assert(data_le[sizeof(KeyType) + sizeof(ArraySize) ]==Compound::SupportedTypes::getTypeIndex<Compound>());
 
 	Compound createTestCompound()
 		{
 		std::vector<Compound> B;
-		B.push_back(Compound{}.insert(DataStore::KeyTypeCountValueDefs::KeyType{"b01"}, 0x4030202));
+		B.push_back(Compound{}.insert(KeyType{"b01"}, 0x4030202));
 		B.push_back(Compound{});
 		std::vector<std::string> C{"Hello", "World"};
 
 		Compound ret;
-		ret.insert(DataStore::KeyTypeCountValueDefs::KeyType{"A"}, Compound{}
-				.insert(DataStore::KeyTypeCountValueDefs::KeyType{"a1"}, 0x4030201)
-				.insert(DataStore::KeyTypeCountValueDefs::KeyType{"a2"}, std::string("Foobar")))
-			.insert(DataStore::KeyTypeCountValueDefs::KeyType{"B"}, std::move(B))
-			.insert(DataStore::KeyTypeCountValueDefs::KeyType{"C"}, std::move(C));
+		ret.insert(KeyType{"A"}, Compound{}
+				.insert(KeyType{"a1"}, 0x4030201)
+				.insert(KeyType{"a2"}, std::string("Foobar")))
+			.insert(KeyType{"B"}, std::move(B))
+			.insert(KeyType{"C"}, std::move(C));
 
 		return ret;
 		}
