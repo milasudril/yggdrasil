@@ -10,11 +10,22 @@
 #include <OpenEXR/half.h>
 #include <cstdint>
 #include <cstddef>
+#include <array>
 
 namespace Yggdrasil
 	{
+	namespace detail
+		{
+		template<class T>
+		struct MakeVector
+			{using type __attribute__((vector_size(4*sizeof(T)))) = T;};
+
+		template<>
+		struct MakeVector<half>
+			{using type = std::array<half, 4>;};
+		}
 	template<class T>
-	using vec4_t __attribute__((vector_size(4*sizeof(T)))) = T ;
+	using vec4_t = typename detail::MakeVector<T>::type;
 
 	using String = Analib::StringNoSso;
 	using KeyType = DataStore::KeyTypeCountValueDefs::KeyType;
@@ -50,7 +61,7 @@ namespace Yggdrasil
 		,vec4_t<uint32_t>
 		,vec4_t<int64_t>
 		,vec4_t<uint64_t>
-//TODO (Requires emulation, no arithmetic needed though):,vec4_t<half>
+		,vec4_t<half>
 		,vec4_t<float>
 		,vec4_t<double>
 
