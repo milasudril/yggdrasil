@@ -19,14 +19,12 @@ namespace Test
 		static void keyNotFound(KeyType key)
 			{throw key;}
 
-		template<class T>
 		[[noreturn]]
 		static void keyValueHasWrongType(KeyType key, size_t actualType)
 			{throw key;}
 
-		template<class T>
 		[[noreturn]]
-		static void keyAlreadyExists(KeyType key, T const& value)
+		static void keyAlreadyExists(KeyType key)
 			{throw key;}
 
 		template<class StatusCode, class Deserializer>

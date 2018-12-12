@@ -160,23 +160,39 @@ namespace DataStore
 			template<class T>
 			BasicCompound& insert_impl(key_type&& key, T&& value);
 
+			template<class KeyLike>
+			auto __attribute__((noinline)) find(KeyLike const& key) const
+				{return m_content.find(key);}
+
+			void __attribute__((noinline)) throwIfFound(key_type const& key) const
+				{
+				auto i = m_content.find(key);
+				if(i != m_content.end())
+					{ExceptionPolicy::keyAlreadyExists(key);}
+				}
+
+			template<class KeyLike>
+			auto __attribute__((noinline)) throwIfNotFound(KeyLike const& key) const
+				{
+				auto i = m_content.find(key);
+				if(i == m_content.end())
+					{ExceptionPolicy::keyNotFound(key);}
+				else
+					{return i;}
+				}
 		};
+
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	template<class T, class KeyLike>
 	[[nodiscard]] T const& BasicCompound<ExceptionPolicy, KeyType, Types...>::get(KeyLike const& key) const
 		{
-		auto i = m_content.find(key);
-		if(i != m_content.end())  // Use this style to trigger warning about noreturn
-			{
-			auto x = std::get_if<ValueWrapper<T>>(&i->second);
-			if( x != nullptr )
-				{return x->get();}
-			else
-				{ExceptionPolicy::template keyValueHasWrongType<T>(key, i->second.index());}
-			}
+		auto i = throwIfNotFound(key);
+		auto x = std::get_if<ValueWrapper<T>>(&i->second);
+		if( x != nullptr )
+			{return x->get();}
 		else
-			{ExceptionPolicy::keyNotFound(key);}
+			{ExceptionPolicy::keyValueHasWrongType(key, i->second.index());}
 		}
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
@@ -184,19 +200,10 @@ namespace DataStore
 	[[nodiscard]] BasicCompound<ExceptionPolicy, KeyType, Types...>& BasicCompound<ExceptionPolicy, KeyType, Types...>::insert_impl
 		(key_type&& key, T&& value)
 		{
-		auto i = m_content.find(key);
-		if(i == m_content.end())
-			{
-			using PlainT = std::remove_reference_t<T>;
-			m_content.insert(std::make_pair(std::move(key), ValueWrapper<PlainT>{std::forward<PlainT>(value)}));
-			return *this;
-			}
-		else
-			{
-			std::visit([key](auto const& var) {ExceptionPolicy::keyAlreadyExists(key, var.get());}, i->second);
-			assert(false);
-			return *this;
-			}
+		throwIfFound(key);
+		using PlainT = std::remove_reference_t<T>;
+		m_content.insert(std::make_pair(std::move(key), ValueWrapper<PlainT>{std::forward<PlainT>(value)}));
+		return *this;
 		}
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
