@@ -38,15 +38,13 @@ namespace Yggdrasil
 		struct MakeVector
 			{using type __attribute__((vector_size(4*sizeof(T)))) = T;};
 
-		static_assert(std::is_empty_v<std::monostate>);
-
 		template<>
 		struct MakeVector<Minifloat>
-			{using type = std::monostate;};
+			{using type = Analib::Empty<Minifloat>;};
 
 		template<>
 		struct MakeVector<Half>
-			{using type = std::monostate;};
+			{using type = Analib::Empty<Half>;};
 		}
 
 	template<class T>
