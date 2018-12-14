@@ -323,22 +323,6 @@ namespace DataStore
 	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
 	[[nodiscard]] inline auto load(BasicCompound<ExceptionPolicy, KeyType, Types...>& val, Deserializer&& deserializer)
 		{return deserializer(val);}
-
-	[[nodiscard]] inline bool readFailed(bool val)
-		{return !val;}
-
-	template<class ExceptionPolicy, class KeyType, class... Types, class Deserializer>
-	[[nodiscard]] inline auto load(Analib::Empty<BasicCompound<ExceptionPolicy, KeyType, Types...>>, Deserializer&& deserializer)
-		{
-		BasicCompound<ExceptionPolicy, KeyType, Types...> ret;
-		auto status = deserializer(ret);
-		if(unlikely(readFailed(status)))
-			{
-			ExceptionPolicy::readError(status,  std::forward<Deserializer>(deserializer));
-			assert(false);
-			}
-		return ret;
-		}
 	}
 
 #endif

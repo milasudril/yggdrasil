@@ -28,15 +28,14 @@ int main()
 	{
 	Yggdrasil::Compound<MyExceptionPolicy> test;
 	DataStore::PosixFileReader fileIn(__FILE__);
-	assert(DataStore::load(test, DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{fileIn}}) ==
-		Yggdrasil::StatusCode::Success);
+	assert(load(test, fileIn) == Yggdrasil::StatusCode::Success);
 	printf("%zu\n", test.childCount());
 
 	test.insert(Yggdrasil::KeyType("Foobar"), Yggdrasil::String("Hello"));
 
 	std::vector<std::byte> buffer;
 	DataStore::MemWriter writer{buffer};
-	assert(store(test, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{writer}}));
+	assert(store(test, writer));
 
 	return 0;
 	}

@@ -104,10 +104,4 @@ int main()
 			return true;
 			}));
 		}
-
-		{
-		auto res = DataStore::load(Analib::Empty<Test::Compound>{}, [](Test::Compound&)
-			{return true;});
-		}
-
 	}

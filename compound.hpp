@@ -7,6 +7,13 @@
 
 #include "basic_compound.hpp"
 #include "key_type_count_value_defs.hpp"
+
+#include "native_decoder.hpp"
+#include "key_type_count_value_deserializer.hpp"
+#include "native_encoder.hpp"
+#include "key_type_count_value_serializer.hpp"
+
+
 #include "analib/cxxstring/string.hpp"
 
 #include <cstdint>
@@ -102,6 +109,15 @@ namespace Yggdrasil
 		>;
 
 	static_assert(Compound<int>::SupportedTypes::size() == 64);
+
+	template<class ExceptionPolicy, class Source>
+	[[nodiscard]] auto load(Compound<ExceptionPolicy>& compound, Source& source)
+		{return DataStore::load(compound, DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{source}});}
+
+	template<class ExceptionPolicy, class Sink>
+	[[nodiscard]] auto store(Compound<ExceptionPolicy> const& compound, Sink& sink)
+		{return DataStore::store(compound, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{sink}});}
+
 	}
 
 #endif
