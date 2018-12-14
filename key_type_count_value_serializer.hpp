@@ -5,6 +5,7 @@
 
 #include "utility.hpp"
 #include "key_type_count_value_defs.hpp"
+#include "analib/typeset/type_set.hpp"
 
 #include <cstdint>
 
@@ -83,6 +84,10 @@ namespace DataStore
 						return r_sink.write(value.data(), value.size());
 						}) == item.end();
 					}
+
+				template<class T>
+				std::enable_if_t<Analib::IsContainerOfEmpty<T>::value, bool>
+				operator()(KeyTypeCountValueDefs::KeyType, T) = delete;
 
 			private:
 				template<class Value>

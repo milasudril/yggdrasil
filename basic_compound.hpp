@@ -36,7 +36,7 @@ namespace DataStore
 		};
 
 	template<class T>
-	class ValueWrapper<T, std::enable_if_t<(sizeof(std::variant<T>) <= 32)> >
+	class ValueWrapper<T, std::enable_if_t<(sizeof(std::variant<T>) <= 32) && !Analib::IsContainerOfEmpty<T>::value> >
 		{
 		public:
 			using element_type = T;
@@ -51,6 +51,15 @@ namespace DataStore
 
 		private:
 			T m_value;
+		};
+
+	template<class T>
+	class ValueWrapper<T, std::enable_if_t<Analib::IsContainerOfEmpty<T>::value> >
+		{
+		public:
+			ValueWrapper() = delete;
+			constexpr bool operator==(ValueWrapper b) const {return true;}
+			constexpr bool operator!=(ValueWrapper b) const {return false;}
 		};
 
 	template<class T>
@@ -214,7 +223,11 @@ namespace DataStore
 			{
 			return std::visit([&item, &visitor](auto const& val)
 				{
-				return visitor(item.first, val.get());
+				using T = std::decay_t<decltype(val)>;
+				if constexpr(std::is_empty_v<T>)
+					{return false;}
+				else
+					{return visitor(item.first, val.get());}
 				}, item.second);
 			}) == m_content.end();
 		}

@@ -33,8 +33,10 @@ namespace Test
 			{throw status;}
 		};
 
+	struct Empty{};
 
-	using Compound = DataStore::BasicCompound<MyExceptionPolicy, KeyType, std::string, int>;
+
+	using Compound = DataStore::BasicCompound<MyExceptionPolicy, KeyType, std::string, int, Empty>;
 
 	constexpr uint8_t data_le[]=
 		{

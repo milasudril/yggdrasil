@@ -23,7 +23,7 @@ namespace DataStore
 			~PosixFileReader()
 				{close(m_fd);}
 
-			[[nodiscard]] size_t read(void* buffer, size_t count)
+			[[nodiscard]] __attribute__((noinline)) size_t read(void* buffer, size_t count)
 				{
 				if(count > BufferSize)
 					{
@@ -56,7 +56,7 @@ namespace DataStore
 			int m_fd;
 
 
-			size_t read_helper(std::byte* buffer, size_t N)
+			size_t __attribute__((noinline)) read_helper(std::byte* buffer, size_t N)
 				{
 				auto const start_pos = buffer;
 				while(N != 0)
