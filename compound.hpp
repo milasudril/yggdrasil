@@ -101,22 +101,50 @@ namespace Yggdrasil
 
 		,String
 		,std::byte
-		,std::monostate
-		,std::monostate
-		,std::monostate
-		,std::monostate
-		,std::monostate
+		,Analib::Empty<std::integral_constant<int, 1>>
+		,Analib::Empty<std::integral_constant<int, 2>>
+		,Analib::Empty<std::integral_constant<int, 3>>
+		,Analib::Empty<std::integral_constant<int, 4>>
+		,Analib::Empty<std::integral_constant<int, 5>>
 		>;
 
 	static_assert(Compound<int>::SupportedTypes::size() == 64);
 
+	namespace detail
+		{
+		constexpr Analib::InlineString MagicNumber{"yggdrasil v 1.0"};
+		constexpr uint32_t EndianCheck{0x01020304};
+		}
+
 	template<class ExceptionPolicy, class Source>
-	[[nodiscard]] auto load(Compound<ExceptionPolicy>& compound, Source& source)
-		{return DataStore::load(compound, DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{source}});}
+	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source& source)
+		{
+		decltype(detail::MagicNumber) magic_number{};
+		if(unlikely(source.read(&magic_number, sizeof(magic_number) != sizeof(magic_number))))
+			{return StatusCode::EndOfFile;}
+
+		uint32_t endian_check{};
+		if(unlikely(source.read(&endian_check, sizeof(endian_check)) != sizeof(endian_check)))
+			{return StatusCode::EndOfFile;}
+
+		if(likely(detail::MagicNumber != magic_number))
+			{return StatusCode::UnsupportedFileFormat;}
+
+		if(unlikely(detail::EndianCheck != endian_check))
+			{return StatusCode::UnsupportedFileFormat;}
+
+		return DataStore::load(compound, DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{source}});
+		}
 
 	template<class ExceptionPolicy, class Sink>
-	[[nodiscard]] auto store(Compound<ExceptionPolicy> const& compound, Sink& sink)
-		{return DataStore::store(compound, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{sink}});}
+	[[nodiscard]] bool store(Compound<ExceptionPolicy> const& compound, Sink& sink)
+		{
+		if(unlikely(sink.write(&detail::MagicNumber, sizeof(detail::MagicNumber))) != sizeof(detail::MagicNumber))
+			{return false;}
+		if(unlikely(!sink.write(&detail::EndianCheck, sizeof(detail::EndianCheck))) != sizeof(detail::EndianCheck))
+			{return false;}
+		return DataStore::store(compound, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{sink}});
+		}
 
 	}
 
