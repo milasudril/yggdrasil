@@ -95,10 +95,10 @@ namespace DataStore
 		public:
 			using mapped_type = std::variant
 				<
-				  ValueWrapper<BasicCompound>
-				, ValueWrapper<Types>...
-				, ValueWrapper<std::vector<BasicCompound>>
+				  ValueWrapper<Types>...
+				, ValueWrapper<BasicCompound>
 				, ValueWrapper<std::vector<Types>>...
+				, ValueWrapper<std::vector<BasicCompound>>
 				>;
 
 			using key_type = KeyType;
