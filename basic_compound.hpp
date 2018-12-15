@@ -102,8 +102,13 @@ namespace DataStore
 				>;
 
 			using key_type = KeyType;
-
-			using SupportedTypes = Analib::TypeSet<BasicCompound, Types..., std::vector<BasicCompound>, std::vector<Types>...>;
+			using SupportedTypes = Analib::TypeSet
+				<
+				  Types...
+				, BasicCompound
+				, std::vector<Types>...
+				, std::vector<BasicCompound>
+				>;
 
 			template<class T, class KeyLike>
 			[[nodiscard]] T& get(KeyLike const& key)

@@ -86,8 +86,6 @@ namespace Test
 		,'W','o','r','l','d'
 		};
 
-	static_assert(data_le[sizeof(KeyType) + sizeof(ArraySize) ]==Compound::SupportedTypes::getTypeIndex<Compound>());
-
 	Compound createTestCompound()
 		{
 		std::vector<Compound> B;
