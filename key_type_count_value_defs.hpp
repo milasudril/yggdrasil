@@ -60,7 +60,15 @@ namespace DataStore
 
 		using ArraySize = uint32_t;
 
-		enum class StatusCode:int{Success, UnknownType, EndOfFile, TreeTooDeep, UnsupportedFileFormat};
+		enum class StatusCode:int
+			{
+			 Success
+			,UnknownType
+			,EndOfFile
+			,TreeTooDeep
+			,UnsupportedFileFormat
+			,UnsupportedByteOrder
+			};
 
 		[[nodiscard]] inline bool readFailed(StatusCode code)
 			{return code!=StatusCode::Success;}

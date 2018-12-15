@@ -91,7 +91,6 @@ namespace Yggdrasil
 		,vec4_t<uint32_t>
 		,vec4_t<uint64_t>
 
-
 		,vec4_t<Minifloat>
 		,vec4_t<Half>
 		,vec4_t<float>
@@ -108,28 +107,25 @@ namespace Yggdrasil
 
 	static_assert(Compound<int>::SupportedTypes::size() == 64);
 
-	namespace detail
-		{
-		constexpr Analib::InlineString MagicNumber{"yggdrasil v 1.0"};
-		constexpr uint32_t EndianCheck{0x01020304};
-		}
+	constexpr Analib::InlineString MagicNumber{"yggdrasil v 1.0"};
+	constexpr uint32_t ByteOrderMarker{0x01020304};
 
 	template<class ExceptionPolicy, class Source>
 	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source& source)
 		{
-		decltype(detail::MagicNumber) magic_number{};
+		decltype(MagicNumber) magic_number{};
 		if(unlikely(source.read(&magic_number, sizeof(magic_number) != sizeof(magic_number))))
 			{return StatusCode::EndOfFile;}
 
-		uint32_t endian_check{};
-		if(unlikely(source.read(&endian_check, sizeof(endian_check)) != sizeof(endian_check)))
+		uint32_t byte_order_marker{};
+		if(unlikely(source.read(&byte_order_marker, sizeof(byte_order_marker)) != sizeof(byte_order_marker)))
 			{return StatusCode::EndOfFile;}
 
-		if(likely(detail::MagicNumber != magic_number))
+		if(likely(MagicNumber != magic_number))
 			{return StatusCode::UnsupportedFileFormat;}
 
-		if(unlikely(detail::EndianCheck != endian_check))
-			{return StatusCode::UnsupportedFileFormat;}
+		if(unlikely(ByteOrderMarker != byte_order_marker))
+			{return StatusCode::UnsupportedByteOrder;}
 
 		return DataStore::load(compound, DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{source}});
 		}
@@ -137,9 +133,9 @@ namespace Yggdrasil
 	template<class ExceptionPolicy, class Sink>
 	[[nodiscard]] bool store(Compound<ExceptionPolicy> const& compound, Sink& sink)
 		{
-		if(unlikely(sink.write(&detail::MagicNumber, sizeof(detail::MagicNumber))) != sizeof(detail::MagicNumber))
+		if(unlikely(sink.write(&MagicNumber, sizeof(MagicNumber))) != sizeof(MagicNumber))
 			{return false;}
-		if(unlikely(!sink.write(&detail::EndianCheck, sizeof(detail::EndianCheck))) != sizeof(detail::EndianCheck))
+		if(unlikely(!sink.write(&ByteOrderMarker, sizeof(ByteOrderMarker))) != sizeof(ByteOrderMarker))
 			{return false;}
 		return DataStore::store(compound, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{sink}});
 		}
