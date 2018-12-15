@@ -15,7 +15,7 @@ stored directly after the type identifer. For more details including supported t
  * When data needs to be loaded from a non-seekable source, such as a compressed file, network
    socket, pipe, or a tape drive.
 
-## When is Yggrasil a bad format
+## When is Yggdrasil a bad format
 
  * Random access to serialized data is needed
  * There are frequent updates to the serialized data
