@@ -37,9 +37,39 @@ namespace Yggdrasil
 
 	namespace detail
 		{
+#ifdef __AVX__
+		constexpr auto MaxNativeVectorSize = 8;
+#else
+		constexpr auto MaxNativeVectorSize = 4;
+#endif
+		template<class T, class Enable = void>
+		struct MakeVector;
+
 		template<class T>
-		struct MakeVector
+		struct HalfSize;
+
+		template<>
+		struct HalfSize<double>
+			{using type = float;};
+
+		template<>
+		struct HalfSize<int64_t>
+			{using type = int32_t;};
+
+		template<>
+		struct HalfSize<uint64_t>
+			{using type = uint32_t;};
+
+		template<class T>
+		struct MakeVector<T, std::enable_if_t< (sizeof(T) <= MaxNativeVectorSize) >>
 			{using type __attribute__((vector_size(4*sizeof(T)))) = T;};
+
+		template<class T>
+		struct MakeVector<T, std::enable_if_t< (sizeof(T) > MaxNativeVectorSize) >>
+			{
+			// For now, disable support for over-sized vectors
+			using type = Analib::Empty<T>;
+			};
 
 		template<>
 		struct MakeVector<Minifloat>

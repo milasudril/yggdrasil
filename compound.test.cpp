@@ -127,7 +127,7 @@ int main()
 	assert(load(test, fileIn) == Yggdrasil::StatusCode::Success);
 	printf("%zu\n", test.childCount());
 
-//	test.insert(Yggdrasil::KeyType("Foobar"), Yggdrasil::String("Hello"));
+	test.insert(Yggdrasil::KeyType("Foobar"), Yggdrasil::String("Hello"));
 
 	std::vector<std::byte> buffer;
 	DataStore::MemWriter writer{buffer};
