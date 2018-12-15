@@ -1,9 +1,0 @@
-{
-{foo}{str}{bar}
-{subobj}{obj}
-	{
-	{value in subobj}{i32}{34}
-	{value2 in subobj}{i32}{14}
-	}
-{third key}{i32a}{{1}{2}{3}}
-}
