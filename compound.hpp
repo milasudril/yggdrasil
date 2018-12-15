@@ -54,7 +54,97 @@ namespace Yggdrasil
 	using KeyType = DataStore::KeyTypeCountValueDefs::KeyType;
 	using StatusCode = DataStore::KeyTypeCountValueDefs::StatusCode;
 
+	enum class TypeId
+		{
+		// Signed integer types
+		 Int8
+		,Int16
+		,Int32
+		,Int64
 
+		// Unsigned integer types
+		,Uint8
+		,Uint16
+		,Uint32
+		,Uint64
+
+		// Floating point types
+		,Float8
+		,Float16
+		,Float32
+		,Float64
+
+		// Other types
+		,String
+		,Raw
+		,Reserved0
+		,Reserved1
+
+		// Vector versions of arthmetic types
+		,VecInt8
+		,VecInt16
+		,VecInt32
+		,VecInt64
+
+		,VecUint8
+		,VecUint16
+		,VecUint32
+		,VecUint64
+
+		,VecFloat8
+		,VecFloat16
+		,VecFloat32
+		,VecFloat64
+
+		,Reserved2
+		,Reserved3
+		,Reserved4
+		,Compound
+
+		// Arrays
+		,ArrayInt8
+		,ArrayInt16
+		,ArrayInt32
+		,ArrayInt64
+
+		,ArrayUint8
+		,ArrayUint16
+		,ArrayUint32
+		,ArrayUint64
+
+		,ArrayFloat8
+		,ArrayFloat16
+		,ArrayFloat32
+		,ArrayFloat64
+
+		,ArrayString
+		,ArrayRaw
+		,ArrayReserved0
+		,ArrayReserved1
+
+		,ArrayVecInt8
+		,ArrayVecInt16
+		,ArrayVecInt32
+		,ArrayVecInt64
+
+		,ArrayVecUint8
+		,ArrayVecUint16
+		,ArrayVecUint32
+		,ArrayVecUint64
+
+		,ArrayVecFloat8
+		,ArrayVecFloat16
+		,ArrayVecFloat32
+		,ArrayVecFloat64
+
+		,ArrayReserved2
+		,ArrayReserved3
+		,ArrayReserved4
+		,ArrayCompound
+		,UnkownType
+		};
+
+	static_assert(TypeId::UnkownType == static_cast<TypeId>(64));
 
 	template<class ExceptionPolicy>
 	using Compound = DataStore::BasicCompound
@@ -74,13 +164,19 @@ namespace Yggdrasil
 		,uint32_t
 		,uint64_t
 
-		// Floats
+		// Floating point types
 		,Minifloat
 		,Half
 		,float
 		,double
 
-		// Vector versions of each type
+		// Other types
+		,String
+		,std::byte
+		,Analib::Empty<std::integral_constant<int, 0>>
+		,Analib::Empty<std::integral_constant<int, 1>>
+
+		// Vector versions of arthmetic types
 		,vec4_t<int8_t>
 		,vec4_t<int16_t>
 		,vec4_t<int32_t>
@@ -96,13 +192,10 @@ namespace Yggdrasil
 		,vec4_t<float>
 		,vec4_t<double>
 
-		,String
-		,std::byte
-		,Analib::Empty<std::integral_constant<int, 1>>
+		// Other
 		,Analib::Empty<std::integral_constant<int, 2>>
 		,Analib::Empty<std::integral_constant<int, 3>>
 		,Analib::Empty<std::integral_constant<int, 4>>
-		,Analib::Empty<std::integral_constant<int, 5>>
 		>;
 
 	static_assert(Compound<int>::SupportedTypes::size() == 64);
