@@ -1,13 +1,15 @@
 //@	{"targets":[{"name":"compound.test","type":"application", "autorun":1}]}
 
 #include "compound.hpp"
-#include "native_decoder.hpp"
-#include "posix_file_reader.hpp"
-#include "key_type_count_value_deserializer.hpp"
 
-#include "native_encoder.hpp"
+#include "mem_reader.hpp"
 #include "mem_writer.hpp"
-#include "key_type_count_value_serializer.hpp"
+#include "test/data_generator.hpp"
+
+#include <random>
+#include <limits>
+#include <exception>
+#include <cmath>
 
 struct MyExceptionPolicy
 	{
@@ -21,13 +23,13 @@ struct MyExceptionPolicy
 
 	[[noreturn]]
 	static void keyAlreadyExists(Yggdrasil::KeyType const& key)
-		{throw key;}
+		{throw std::runtime_error(std::string(std::begin(key), std::end(key)));}
 	};
+
+using SupportedTypes = Yggdrasil::Compound<MyExceptionPolicy>::SupportedTypes;
 
 namespace ImplCheck
 	{
-	using SupportedTypes = Yggdrasil::Compound<MyExceptionPolicy>::SupportedTypes;
-
 	static_assert(sizeof(Yggdrasil::KeyType) == Yggdrasil::KeySize);
 	static_assert(sizeof(DataStore::KeyTypeCountValueDefs::KeyType) == Yggdrasil::KeySize);
 	static_assert(sizeof(DataStore::KeyTypeCountValueDefs::ArraySize) == Yggdrasil::ArrayElemCountSize);
@@ -121,19 +123,254 @@ namespace ImplCheck
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Compound<MyExceptionPolicy>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayCompound));
 	}
 
+constexpr std::array<double, 64> type_weights
+	{
+	 1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,8.0
+
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+
+	,1.0
+	,1.0
+	,1.0
+	,1.0
+	};
+
+static std::geometric_distribution<uint32_t> number_of_children{1.0/24.0};
+static std::discrete_distribution<uint8_t> type_freq{std::begin(type_weights), std::end(type_weights)};
+
+template<class Rng>
+Yggdrasil::KeyType generateKey(Rng& rng)
+	{
+	Yggdrasil::KeyType ret{};
+	std::generate(ret.begin(), ret.end(), [&rng]()
+		{return Test::generateAscii(rng);});
+	return ret;
+	}
+
+
+template<class Rng>
+void fillCompound(Yggdrasil::Compound<MyExceptionPolicy>& compound, Rng& rng, size_t depth);
+
+template<class Compound, class Rng>
+class DataGenerator
+	{
+	public:
+		explicit DataGenerator(Compound& compound, Rng& rng, size_t depth) : r_compound(compound), r_rng(rng)
+			,m_depth(depth)
+			{}
+
+		void operator()() {}
+
+
+		template<template<class> class Sequence, class T>
+		std::enable_if_t<DataStore::IsSequenceOf<Sequence<T>, T>::value>
+		operator()(Analib::Empty<Sequence<T>>)
+			{
+			static_assert(DataStore::IsPod<T>::value);
+			auto M = Test::generateSize(r_rng, 1.0/(1024.0*1024.0*sizeof(T)));
+			std::vector<T> ret;
+			while(M!=0)
+				{
+				ret.push_back(Test::generate<T>(r_rng));
+				--M;
+				}
+			auto key = generateKey(r_rng);
+			r_compound.insert(key, std::move(ret));
+			}
+
+
+		template<template<class> class Sequence>
+		std::enable_if_t<DataStore::IsSequenceOf<Sequence<Compound>, Compound>::value>
+		operator()(Analib::Empty<Sequence<Compound>>)
+			{
+			auto N = number_of_children(r_rng);
+			Sequence<Compound> compounds;
+			while(N!=0)
+				{
+				Compound next;
+				fillCompound(next, r_rng, m_depth);
+				compounds.push_back(std::move(next));
+				--N;
+				}
+			auto key = generateKey(r_rng);
+			r_compound.insert(key, std::move(compounds));
+			}
+
+		template<template<class> class Sequence>
+		std::enable_if_t<DataStore::IsSequenceOf<Sequence<Yggdrasil::String>, Yggdrasil::String>::value>
+		operator()(Analib::Empty<Sequence<Yggdrasil::String>>)
+			{
+			auto N = number_of_children(r_rng);
+			Sequence<Yggdrasil::String> strings;
+			while(N!=0)
+				{
+				auto M = Test::generateSize(r_rng, 1.0/(1024.0*1024.0));
+				Yggdrasil::String ret;
+				while(M!=0)
+					{
+					ret.append(Test::generateAscii(r_rng));
+					--M;
+					}
+				strings.push_back(std::move(ret));
+				--N;
+				}
+			auto key = generateKey(r_rng);
+			r_compound.insert(key, std::move(strings));
+			}
+
+		template<class T>
+		void operator()(Analib::Empty<T>)
+			{
+			if constexpr(DataStore::IsPod<T>::value)
+				{
+				auto key = generateKey(r_rng);
+				r_compound.insert(key, Test::generate<T>(r_rng));
+				}
+			else if constexpr(std::is_same_v<Compound, T>)
+				{
+				Compound next;
+				fillCompound(next, r_rng, m_depth);
+				auto key = generateKey(r_rng);
+				r_compound.insert(key, std::move(next));
+				}
+			else if constexpr(std::is_same_v<Yggdrasil::String, T>)
+				{
+				auto N = Test::generateSize(r_rng, 1.0/(1024.0*1024.0));
+				Yggdrasil::String ret;
+				while(N!=0)
+					{
+					ret.append(Test::generateAscii(r_rng));
+					--N;
+					}
+				auto key = generateKey(r_rng);
+				r_compound.insert(key, std::move(ret));
+				}
+			else
+				{printf("%zx ", SupportedTypes::getTypeIndex<T>());}
+			}
+
+	private:
+		Compound& r_compound;
+		Rng& r_rng;
+		size_t m_depth;
+
+	};
+
+
+template<class Rng>
+void fillCompound(Yggdrasil::Compound<MyExceptionPolicy>& compound, Rng& rng, size_t depth)
+	{
+	auto N = static_cast<size_t>( static_cast<double>(number_of_children(rng)) * std::exp2(-0.5*depth) + 0.5) + 1;
+	while(N!=0)
+		{
+		auto type_id = type_freq(rng);
+		SupportedTypes::select(type_id, DataGenerator{compound, rng, depth + 1});
+		--N;
+		}
+
+	}
+
 
 int main()
 	{
-	Yggdrasil::Compound<MyExceptionPolicy> test;
-	DataStore::PosixFileReader fileIn(__FILE__);
-	assert(load(test, fileIn) == Yggdrasil::StatusCode::Success);
-	printf("%zu\n", test.childCount());
+	Yggdrasil::Compound<MyExceptionPolicy> test_1;
+		{
+		std::minstd_rand randgen(time(0));
+		fillCompound(test_1, randgen, 0);
+		}
 
-	test.insert(Yggdrasil::KeyType("Foobar"), Yggdrasil::String("Hello"));
+	assert(test_1.childCount() > 0);
 
-	std::vector<std::byte> buffer;
-	DataStore::MemWriter writer{buffer};
-	assert(store(test, writer));
+	std::vector<std::byte> buffer_1;
+		{
+		DataStore::MemWriter writer{buffer_1};
+		assert(store(test_1, writer));
+		}
 
+	Yggdrasil::Compound<MyExceptionPolicy> test_2;
+		{
+		DataStore::MemReader reader{buffer_1.data(), buffer_1.data() + buffer_1.size()};
+		assert(load(test_2, reader) == Yggdrasil::StatusCode::Success);
+		}
+
+	std::vector<std::byte> buffer_2;
+		{
+		DataStore::MemWriter writer{buffer_2};
+		assert(store(test_2, writer));
+		}
+
+	assert(buffer_1 == buffer_2);
 	return 0;
 	}

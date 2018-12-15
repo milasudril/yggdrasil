@@ -1,5 +1,7 @@
 //@	{"targets":[{"name":"data_generator.hpp","type":"include"}]}
 
+#include "utility.hpp"
+
 #include <vector>
 #include <random>
 #include <algorithm>
@@ -25,13 +27,21 @@ namespace Test
 		static_assert(sizeof(intervals) == sizeof(weights));
 		}
 
+	static std::piecewise_linear_distribution<> file_size(std::begin(detail::intervals)
+		, std::end(detail::intervals)
+		, std::begin(detail::weights));
+
 	template<class Rng>
-	std::vector<std::byte> getRandomData(Rng&& rng, double scale_factor)
+	size_t generateSize(Rng& rng, double scale_factor)
 		{
-		std::piecewise_linear_distribution<> d(std::begin(detail::intervals)
-			, std::end(detail::intervals)
-			, std::begin(detail::weights));
-		auto size = static_cast<size_t>(scale_factor*d(rng) + 0.5);
+		return static_cast<size_t>(scale_factor*file_size(rng) + 0.5);
+
+		}
+
+	template<class Rng>
+	std::vector<std::byte> getRandomData(Rng& rng, double scale_factor)
+		{
+		auto size = generateSize(rng, scale_factor);
 
 		std::vector<std::byte> random_bytes(size);
 		std::generate(std::begin(random_bytes), std::end(random_bytes), [&rng]()
@@ -42,4 +52,47 @@ namespace Test
 
 		return random_bytes;
 		}
+
+
+	template<class T, class Rng>
+	std::enable_if_t<std::is_integral_v<T>, T> generate(Rng& rng)
+		{
+		std::uniform_int_distribution<T> U(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+		return U(rng);
+		}
+
+	template<class T, class Rng>
+	std::enable_if_t<std::is_same_v<T, std::byte>, std::byte> generate(Rng& rng)
+		{
+		return static_cast<std::byte>(generate<unsigned char>(rng));
+		}
+
+	template<class T, class Rng>
+	std::enable_if_t<std::is_floating_point_v<T>, T> generate(Rng& rng)
+		{
+		std::uniform_real_distribution<T> U(-16, 16);
+		return U(rng);
+		}
+
+	template<class Rng>
+	char generateAscii(Rng& rng)
+		{
+		std::uniform_int_distribution<char> U('0', 'z');
+		return U(rng);
+		}
+
+	template<class T, class Rng>
+	std::enable_if_t<std::is_arithmetic_v<std::decay_t<decltype(std::declval<T>()[0])>>
+		&& sizeof(T) == 4*sizeof(std::declval<T>()[0]), T> generate(Rng& rng)
+		{
+		using ElementType = std::decay_t<decltype(std::declval<T>()[0])>;
+		return T
+			{
+			 generate<ElementType>(rng)
+			,generate<ElementType>(rng)
+			,generate<ElementType>(rng)
+			,generate<ElementType>(rng)
+			};
+		}
+
 	}

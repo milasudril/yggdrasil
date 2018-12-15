@@ -146,7 +146,7 @@ namespace Yggdrasil
 	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source& source)
 		{
 		decltype(MagicNumber) magic_number{};
-		if(unlikely(source.read(&magic_number, sizeof(magic_number) != sizeof(magic_number))))
+		if(unlikely(source.read(&magic_number, sizeof(magic_number)) != sizeof(magic_number)))
 			{return StatusCode::EndOfFile;}
 
 		uint32_t byte_order_marker{};
@@ -167,7 +167,7 @@ namespace Yggdrasil
 		{
 		if(unlikely(sink.write(&MagicNumber, sizeof(MagicNumber))) != sizeof(MagicNumber))
 			{return false;}
-		if(unlikely(!sink.write(&ByteOrderMarker, sizeof(ByteOrderMarker))) != sizeof(ByteOrderMarker))
+		if(unlikely(sink.write(&ByteOrderMarker, sizeof(ByteOrderMarker))) != sizeof(ByteOrderMarker))
 			{return false;}
 		return DataStore::store(compound, DataStore::KeyTypeCountValueSerializer{DataStore::NativeEncoder{sink}});
 		}
