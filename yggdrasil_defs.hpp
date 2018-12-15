@@ -14,6 +14,7 @@ namespace Yggdrasil
 	constexpr uint32_t ByteOrderMarker{0x01020304};
 	constexpr size_t KeySize{32};
 	constexpr size_t ArrayElemCountSize{4};
+	constexpr size_t TypeIdSize{1};
 
 	enum class TypeId
 		{

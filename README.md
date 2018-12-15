@@ -1,35 +1,28 @@
-# Yg(g)rdrasil
+# Yggrdrasil
 
-Ygrdrasil General Data tRee Storage and Interchange Language
+Yggdrasil is a binary hierarcical file format inteded for simple serialization/deserialization.
+The format stores data items as tuples each consisting of a key, a type identifier, and its value.
+If the type identifier indicates an array or a sub-object, the number of items in that item is
+stored directly after the type identifer. For more details including supported types, see
+`yggdrasil_defs.hpp`.
 
+## When is Yggdrasil a good format (aka chosen optimization points)
 
-## Supported data types
+ * Records are changed infrequently, or at least data does not need to be reserialized for every
+   update.
+ * There are not too many keys at each level
+ * The actual payload is typically long arrays
+ * When data needs to be loaded from a non-seekable source, such as a compressed file, network
+   socket, pipe, or a tape drive.
 
-+-----------+-----------------------------+
-| Type      | Description                 |
-+-----------+-----------------------------+
-| i8        | 8-bit signed integer        |
-| i10       | 16-bit signed integer       |
-| i20       | 32-bit signed integer       |
-| i40       | 64-bit signed integer       |
-| u8        | 8-bit unsigned integer      | 
-| u10       | 16-bit unsigned integer     |
-| u20       | 32-bit unsigned integer     |
-| u40       | 64-bit unsigned integer     |
-| f20       | 32-bit float                |
-| f40       | 64-bit float                |
-| str       | UTF-8 encoded text          |
-| obj       | A collection of keys unique |
-|           | within the object and       |
-|           | corresponding values, where |
-|           | a value is an type found    |
-|           | within this list.           |
-+-----------+-----------------------------+
+## When is Yggrasil a bad format
 
+ * Random access to serialized data is needed
+ * There are frequent updates to the serialized data
 
-    compound:obj
-		{
-		a\ string:str{Lorem\ Ipsum}  # White space are ignored unless preceded by \
-		# Array elements may be delimited by white-space or `;`. Empty elements are ignored
-		an\ array\ of\ integers:i32[1 2 3 4;; 5 6 7 8]
-		}
+## Usage
+
+The class Yggdrasil::Compound is used to represent the "world tree" internally. This is basically
+a recursive std::map, with appropriate getters and setters. Data in a world tree can be serialized
+by calling `Yggdrasil::store`. To load a world tree, call `Yggdrasil::load`. An example of basic
+usage can be found in `compound.test.cpp`, as well as in `test/compound_test.hpp`.

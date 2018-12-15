@@ -29,7 +29,9 @@ namespace ImplCheck
 	using SupportedTypes = Yggdrasil::Compound<MyExceptionPolicy>::SupportedTypes;
 
 	static_assert(sizeof(Yggdrasil::KeyType) == Yggdrasil::KeySize);
+	static_assert(sizeof(DataStore::KeyTypeCountValueDefs::KeyType) == Yggdrasil::KeySize);
 	static_assert(sizeof(DataStore::KeyTypeCountValueDefs::ArraySize) == Yggdrasil::ArrayElemCountSize);
+	static_assert(sizeof(DataStore::KeyTypeCountValueDefs::TypeId) == Yggdrasil::TypeIdSize);
 
 
 	static_assert(SupportedTypes::size() == static_cast<size_t>(Yggdrasil::TypeId::Size));
