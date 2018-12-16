@@ -3,8 +3,8 @@
 #ifndef COMPOUND_TEST_H
 #define COMPOUND_TEST_H
 
-#include "basic_compound.hpp"
-#include "key_type_count_value_defs.hpp"
+#include "../basic_compound.hpp"
+#include "../key_type_count_value_defs.hpp"
 #include <string>
 #include <vector>
 
@@ -27,10 +27,10 @@ namespace Test
 		static void keyAlreadyExists(KeyType key)
 			{throw key;}
 
-		template<class StatusCode, class Deserializer>
+/*		template<class StatusCode, class Deserializer>
 		[[noreturn]]
 		static void readError(StatusCode status, Deserializer&&)
-			{throw status;}
+			{throw status;} */
 		};
 
 	struct Empty{};

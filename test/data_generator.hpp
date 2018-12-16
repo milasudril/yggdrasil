@@ -1,6 +1,6 @@
 //@	{"targets":[{"name":"data_generator.hpp","type":"include"}]}
 
-#include "utility.hpp"
+#include "../utility.hpp"
 
 #include <vector>
 #include <random>
