@@ -146,7 +146,11 @@ namespace Yggdrasil
 	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source& source)
 		{
 		decltype(MagicNumber) magic_number{};
-		if(unlikely(source.read(&magic_number, sizeof(magic_number)) != sizeof(magic_number)))
+		auto n_bytes =  source.read(&magic_number, sizeof(magic_number));
+		if(unlikely(n_bytes == 0))
+			{return StatusCode::Success;}
+
+		if(unlikely(n_bytes != sizeof(magic_number)))
 			{return StatusCode::EndOfFile;}
 
 		uint32_t byte_order_marker{};
