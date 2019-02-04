@@ -102,6 +102,31 @@ namespace Test
 
 		return ret;
 		}
+
+
+	struct MyStatefulExceptionPolicy
+		{
+		[[noreturn]]
+		void keyNotFound(KeyType key) const
+			{throw key;}
+
+		[[noreturn]]
+		void keyValueHasWrongType(KeyType key, size_t actualType) const
+			{throw key;}
+
+		[[noreturn]]
+		void keyAlreadyExists(KeyType key) const
+			{throw key;}
+
+		template<class StatusCode, class Deserializer>
+		[[noreturn]]
+		void readError(StatusCode status, Deserializer&&) const
+			{throw status;}
+
+		int val;
+		};
+
+	using CompoundStatefulEh = DataStore::BasicCompound<MyStatefulExceptionPolicy, KeyType, std::string, int, Empty>;
 	}
 
 #endif

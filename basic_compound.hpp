@@ -87,12 +87,35 @@ namespace DataStore
 		{return !(a < a);}
 
 
-
-
-	template<class ExceptionPolicy, class KeyType, class... Types>
-	class BasicCompound
+	template<class T, class Enable=void>
+	class ExceptionPolicyCaller
 		{
 		public:
+			explicit ExceptionPolicyCaller(T const& obj) : r_obj(&obj) {}
+
+			template<class Function, class ... Args>
+			[[noreturn]] void call(Function&& f , Args&& ... args) const
+				{(r_obj->*f)(std::forward<Args>(args)...);}
+
+		private:
+			T const* r_obj;
+		};
+
+	template<class T>
+	class ExceptionPolicyCaller<T, std::enable_if_t<std::is_empty_v<T>>>
+		{
+		public:
+			template<class Function, class ... Args>
+			[[noreturn]] static void call(Function&& f, Args&& ... args)
+				{f(std::forward<Args>(args)...);}
+		};
+
+	template<class ExceptionPolicy, class KeyType, class... Types>
+	class BasicCompound : private ExceptionPolicyCaller<ExceptionPolicy>
+		{
+		public:
+			using ExceptionHandler = ExceptionPolicyCaller<ExceptionPolicy>;
+
 			using mapped_type = std::variant
 				<
 				  ValueWrapper<Types>...
@@ -109,6 +132,10 @@ namespace DataStore
 				, std::vector<Types>...
 				, std::vector<BasicCompound>
 				>;
+
+			template<class ... ExceptionHandlerArgs>
+			explicit BasicCompound(ExceptionHandlerArgs&& ... args) :
+				ExceptionHandler(std::forward<ExceptionHandlerArgs>(args)...) {}
 
 			template<class T, class KeyLike>
 			[[nodiscard]] T& get(KeyLike const& key)
@@ -182,7 +209,7 @@ namespace DataStore
 				{
 				auto i = m_content.find(key);
 				if(i != m_content.end())
-					{ExceptionPolicy::keyAlreadyExists(key);}
+					{ExceptionHandler::call(&ExceptionPolicy::keyAlreadyExists,key);}
 				}
 
 			template<class KeyLike>
@@ -190,7 +217,7 @@ namespace DataStore
 				{
 				auto i = m_content.find(key);
 				if(i == m_content.end())
-					{ExceptionPolicy::keyNotFound(key);}
+					{ExceptionHandler::call(&ExceptionPolicy::keyNotFound,key);}
 				else
 					{return i;}
 				}
@@ -206,7 +233,7 @@ namespace DataStore
 		if( x != nullptr )
 			{return x->get();}
 		else
-			{ExceptionPolicy::keyValueHasWrongType(key, i->second.index());}
+			{ExceptionHandler::call(&ExceptionPolicy::keyValueHasWrongType, key, i->second.index());}
 		}
 
 	template<class ExceptionPolicy, class KeyType, class... Types>

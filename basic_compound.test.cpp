@@ -104,4 +104,10 @@ int main()
 			return true;
 			}));
 		}
+
+		{
+		Test::MyStatefulExceptionPolicy eh;
+		Test::CompoundStatefulEh sut{eh};
+		sut.insert(Test::KeyType{"Hello"}, Test::CompoundStatefulEh{eh});
+		}
 	}
