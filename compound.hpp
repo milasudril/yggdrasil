@@ -143,7 +143,7 @@ namespace Yggdrasil
 		>;
 
 	template<class ExceptionPolicy, class Source>
-	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source& source)
+	[[nodiscard]] StatusCode load(Compound<ExceptionPolicy>& compound, Source&& source)
 		{
 		decltype(MagicNumber) magic_number{};
 		auto n_bytes =  source.read(&magic_number, sizeof(magic_number));
