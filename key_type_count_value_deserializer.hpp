@@ -107,7 +107,7 @@ namespace DataStore
 
 				[[nodiscard]] KeyTypeCountValueDefs::StatusCode operator()(Analib::Empty<Compound>)
 					{
-					Compound val;
+					auto val = r_sink.create();
 					auto result = r_deserializer(val);
 					if(unlikely(readFailed(result)))
 						{return result;}
@@ -130,7 +130,7 @@ namespace DataStore
 					seq.reserve(size);
 					while(size != 0)
 						{
-						Compound val;
+						auto val = r_sink.create();
 						auto result = r_deserializer(val);
 						if(unlikely(readFailed(result)))
 							{return result;}

@@ -8,16 +8,35 @@
 
 int main()
 	{
-	Test::Compound compound;
-	DataStore::MemReader memReader
 		{
-		  reinterpret_cast<std::byte const*>(std::begin(Test::data_le))
-		, reinterpret_cast<std::byte const*>(std::end(Test::data_le))
-		};
+		Test::Compound compound;
+		DataStore::MemReader memReader
+			{
+			reinterpret_cast<std::byte const*>(std::begin(Test::data_le))
+			, reinterpret_cast<std::byte const*>(std::end(Test::data_le))
+			};
 
-	auto status = DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{memReader}}(compound);
-	assert(status == DataStore::KeyTypeCountValueDefs::StatusCode::Success);
-	assert(memReader.eof());
+		auto status = DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{memReader}}(compound);
+		assert(status == DataStore::KeyTypeCountValueDefs::StatusCode::Success);
+		assert(memReader.eof());
 
-	assert(compound == Test::createTestCompound());
+		assert(compound == Test::createTestCompound());
+		}
+
+		{
+		Test::MyStatefulExceptionPolicy eh;
+		Test::CompoundStatefulEh compound{eh};
+
+		DataStore::MemReader memReader
+			{
+			reinterpret_cast<std::byte const*>(std::begin(Test::data_le))
+			, reinterpret_cast<std::byte const*>(std::end(Test::data_le))
+			};
+
+		auto status = DataStore::KeyTypeCountValueDeserializer{DataStore::NativeDecoder{memReader}}(compound);
+		assert(status == DataStore::KeyTypeCountValueDefs::StatusCode::Success);
+		assert(memReader.eof());
+
+	//	assert(compound == Test::createTestCompound());
+		}
 	}

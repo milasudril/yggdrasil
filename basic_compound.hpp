@@ -95,7 +95,13 @@ namespace DataStore
 
 			template<class Function, class ... Args>
 			[[noreturn]] void call(Function&& f , Args&& ... args) const
-				{(r_obj->*f)(std::forward<Args>(args)...);}
+				{
+				(r_obj->*f)(std::forward<Args>(args)...);
+				std::terminate();
+				}
+
+			[[nodiscard]] T const& state() const
+				{return *r_obj;}
 
 		private:
 			T const* r_obj;
@@ -107,7 +113,10 @@ namespace DataStore
 		public:
 			template<class Function, class ... Args>
 			[[noreturn]] static void call(Function&& f, Args&& ... args)
-				{f(std::forward<Args>(args)...);}
+				{
+				f(std::forward<Args>(args)...);
+				std::terminate();
+				}
 		};
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
@@ -149,6 +158,14 @@ namespace DataStore
 			template<class KeyLike>
 			[[nodiscard]] bool contains(KeyLike const& key) const
 				{return m_content.find(key) != m_content.end();}
+
+			[[nodiscard]] BasicCompound create() const
+				{
+				if constexpr(std::is_empty_v<ExceptionPolicy>)
+					{return BasicCompound{};}
+				else
+					{return BasicCompound{ExceptionHandler::state()};}
+				}
 
 
 			template<class T>
