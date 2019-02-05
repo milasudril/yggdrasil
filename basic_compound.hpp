@@ -144,7 +144,11 @@ namespace DataStore
 
 			template<class ... ExceptionHandlerArgs>
 			explicit BasicCompound(ExceptionHandlerArgs&& ... args) :
-				ExceptionHandler(std::forward<ExceptionHandlerArgs>(args)...) {}
+				ExceptionHandler(std::forward<ExceptionHandlerArgs>(args)...)
+				{
+				static_assert((sizeof(BasicCompound)  == sizeof(MapType) && std::is_empty_v<ExceptionPolicy>)
+					|| !std::is_empty_v<ExceptionPolicy>);
+				}
 
 			template<class T, class KeyLike>
 			[[nodiscard]] T& get(KeyLike const& key)
