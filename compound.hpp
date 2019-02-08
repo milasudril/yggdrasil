@@ -167,7 +167,7 @@ namespace Yggdrasil
 		}
 
 	template<class ExceptionPolicy, class Sink>
-	[[nodiscard]] bool store(Compound<ExceptionPolicy> const& compound, Sink& sink)
+	[[nodiscard]] bool store(Compound<ExceptionPolicy> const& compound, Sink&& sink)
 		{
 		if(unlikely(sink.write(&MagicNumber, sizeof(MagicNumber))) != sizeof(MagicNumber))
 			{return false;}
