@@ -91,7 +91,7 @@ namespace DataStore
 	class ExceptionPolicyCaller
 		{
 		public:
-			explicit ExceptionPolicyCaller(T const& obj) : r_obj(&obj) {}
+			explicit ExceptionPolicyCaller(T& obj) : r_obj(&obj) {}
 
 			template<class Function, class ... Args>
 			[[noreturn]] void call(Function&& f , Args&& ... args) const
@@ -100,11 +100,11 @@ namespace DataStore
 				std::terminate();
 				}
 
-			[[nodiscard]] T const& state() const
+			[[nodiscard]] T& get() const
 				{return *r_obj;}
 
 		private:
-			T const* r_obj;
+			T* r_obj;
 		};
 
 	template<class T>
@@ -117,6 +117,8 @@ namespace DataStore
 				f(std::forward<Args>(args)...);
 				std::terminate();
 				}
+
+			void get() {}
 		};
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
@@ -168,7 +170,7 @@ namespace DataStore
 				if constexpr(std::is_empty_v<ExceptionPolicy>)
 					{return BasicCompound{};}
 				else
-					{return BasicCompound{ExceptionHandler::state()};}
+					{return BasicCompound{ExceptionHandler::get()};}
 				}
 
 
@@ -214,6 +216,9 @@ namespace DataStore
 
 			[[nodiscard]] bool operator!=(BasicCompound const& other) const
 				{return m_content != other.m_content;}
+
+			auto exceptionPolicy() const
+				{return ExceptionHandler::get();}
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
