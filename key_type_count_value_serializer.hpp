@@ -22,7 +22,7 @@ namespace DataStore
 				using SupportedTypes = typename Compound::SupportedTypes;
 
 				template<class Value>
-				std::enable_if_t<IsPod<Value>::value, bool> operator()(KeyTypeCountValueDefs::KeyType key, Value item)
+				std::enable_if_t<IsPod<Value>::value, bool> operator()(KeyTypeCountValueDefs::KeyType key, Value item, size_t)
 					{
 					writeHeader<Value>(key);
 					return r_sink.write(item);
@@ -30,7 +30,7 @@ namespace DataStore
 
 				template<class Value>
 				std::enable_if_t<IsSimpleArray<Value>::value, bool> operator()(KeyTypeCountValueDefs::KeyType key
-					, Value const& item)
+					, Value const& item, size_t)
 					{
 					if(unlikely(!writeHeader<Value>(key)))
 						{return false;}
@@ -41,7 +41,7 @@ namespace DataStore
 					return r_sink.write(item.data(), item.size());
 					}
 
-				bool operator()(KeyTypeCountValueDefs::KeyType key, Compound const& item)
+				bool operator()(KeyTypeCountValueDefs::KeyType key, Compound const& item, size_t)
 					{
 					if(unlikely(!writeHeader<Compound>(key)))
 						{return false;}
@@ -52,7 +52,7 @@ namespace DataStore
 
 				template<template<class> class Sequence>
 				std::enable_if_t<IsSequenceOf<Sequence<Compound>, Compound>::value, bool>
-				operator()(KeyTypeCountValueDefs::KeyType key, Sequence<Compound> const& item)
+				operator()(KeyTypeCountValueDefs::KeyType key, Sequence<Compound> const& item, size_t)
 					{
 					if(unlikely(!writeHeader<Sequence<Compound>>(key)))
 						{return false;}
@@ -71,7 +71,7 @@ namespace DataStore
 				template<template<class> class Sequence, class SimpleArray>
 				std::enable_if_t<IsSimpleArray<SimpleArray>::value
 					&& IsSequenceOf<Sequence<SimpleArray>, SimpleArray>::value, bool>
-				operator()(KeyTypeCountValueDefs::KeyType key, Sequence<SimpleArray> const& item)
+				operator()(KeyTypeCountValueDefs::KeyType key, Sequence<SimpleArray> const& item, size_t)
 					{
 					if(unlikely(!writeHeader<Sequence<SimpleArray>>(key)))
 						{return false;}

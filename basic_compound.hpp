@@ -281,16 +281,19 @@ namespace DataStore
 	template<class NodeVisitor>
 	bool BasicCompound<ExceptionPolicy, KeyType, Types...>::visitItems(NodeVisitor&& visitor) const
 		{
-		return std::find_if_not(m_content.begin(), m_content.end(), [&visitor](auto const& item)
+		size_t index = 0;
+		return std::find_if_not(m_content.begin(), m_content.end(), [&visitor, index](auto const& item) mutable
 			{
-			return std::visit([&item, &visitor](auto const& val)
+			auto ret = std::visit([&item, &visitor, index](auto const& val)
 				{
 				using T = std::decay_t<decltype(val)>;
 				if constexpr(std::is_empty_v<T>)
 					{return false;}
 				else
-					{return visitor(item.first, val.get());}
+					{return visitor(item.first, val.get(), index);}
 				}, item.second);
+			++index;
+			return ret;
 			}) == m_content.end();
 		}
 
