@@ -17,7 +17,7 @@ namespace DataStore
 		class KeyTypeCountValueSerializerSelector
 			{
 			public:
-				explicit KeyTypeCountValueSerializerSelector(Writer& sink)
+				explicit KeyTypeCountValueSerializerSelector(Writer&& sink)
 					: r_sink(std::forward<Writer>(sink)) {}
 				using SupportedTypes = typename Compound::SupportedTypes;
 
@@ -60,7 +60,7 @@ namespace DataStore
 					if(unlikely(!r_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(item.size()))))
 						{return false;}
 
-					return std::find_if_not(item.begin(), item.end(), [*this](auto const& val) mutable
+					return std::find_if_not(item.begin(), item.end(), [this](auto const& val)
 						{
 						if(unlikely(!r_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(val.childCount()))))
 							{return false;}
@@ -117,7 +117,7 @@ namespace DataStore
 				{
 				if(unlikely(!m_sink.write(static_cast<KeyTypeCountValueDefs::ArraySize>(val.childCount()))))
 					{return false;}
-				return val.visitItems(detail::KeyTypeCountValueSerializerSelector<Compound, Sink>{m_sink});
+				return val.visitItems(detail::KeyTypeCountValueSerializerSelector<Compound, Sink>{std::move(m_sink)});
 				}
 
 		private:

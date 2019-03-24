@@ -26,11 +26,6 @@ namespace Test
 		[[noreturn]]
 		static void keyAlreadyExists(KeyType key)
 			{throw key;}
-
-/*		template<class StatusCode, class Deserializer>
-		[[noreturn]]
-		static void readError(StatusCode status, Deserializer&&)
-			{throw status;} */
 		};
 
 	struct Empty{};
