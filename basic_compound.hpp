@@ -93,10 +93,13 @@ namespace DataStore
 		public:
 			explicit ExceptionPolicyCaller(T& obj) : r_obj(&obj) {}
 
+			ExceptionPolicyCaller() : r_obj{nullptr} {}
+
 			template<class Function, class ... Args>
 			[[noreturn]] void call(Function&& f , Args&& ... args) const
 				{
-				(r_obj->*f)(std::forward<Args>(args)...);
+				if(r_obj != nullptr)
+					{(r_obj->*f)(std::forward<Args>(args)...);}
 				std::terminate();
 				}
 
@@ -217,8 +220,9 @@ namespace DataStore
 			[[nodiscard]] bool operator!=(BasicCompound const& other) const
 				{return m_content != other.m_content;}
 
-			auto exceptionPolicy() const
-				{return ExceptionHandler::get();}
+			template<class ExceptionPolicyModifier>
+			auto exceptionPolicy(ExceptionPolicyModifier&& how) const
+				{return how(ExceptionHandler::get());}
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;
