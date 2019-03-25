@@ -332,7 +332,8 @@ class DataGenerator
 template<class Rng>
 void fillCompound(Yggdrasil::Compound<MyExceptionPolicy>& compound, Rng& rng, size_t depth)
 	{
-	auto N = static_cast<size_t>( static_cast<double>(number_of_children(rng)) * std::exp2(-0.5*depth) + 0.5) + 1;
+	auto l = -1.0*static_cast<double>(depth);
+	auto N = static_cast<size_t>( static_cast<double>(number_of_children(rng)) * std::exp2(l) +0.5) + 1;
 	while(N!=0)
 		{
 		auto type_id = type_freq(rng);
