@@ -1,5 +1,7 @@
 //@	{"targets":[{"name":"key_type_count_value_deserializer.test","type":"application","autorun":1}]}
 
+#undef NDEBUG
+
 #include "key_type_count_value_deserializer.hpp"
 
 #include "mem_reader.hpp"

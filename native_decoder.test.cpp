@@ -1,5 +1,7 @@
 //@	{"targets":[{"name":"native_decoder.test", "type":"application", "autorun":1}]}
 
+#undef NDEBUG
+
 #include "native_decoder.hpp"
 #include <cassert>
 

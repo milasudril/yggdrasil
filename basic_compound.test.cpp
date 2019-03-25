@@ -1,5 +1,7 @@
 //@	{"targets":[{"name":"basic_compound.test","type":"application","autorun":1}]}
 
+#undef NDEBUG
+
 #include "basic_compound.hpp"
 #include "test/compound_test.hpp"
 
