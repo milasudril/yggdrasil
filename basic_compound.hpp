@@ -91,24 +91,26 @@ namespace DataStore
 	class ExceptionPolicyCaller
 		{
 		public:
-			explicit ExceptionPolicyCaller(T& obj) : r_obj(&obj) {}
-
-			ExceptionPolicyCaller() : r_obj{nullptr} {}
-
 			template<class Function, class ... Args>
 			[[noreturn]] void call(Function&& f , Args&& ... args) const
 				{
-				if(r_obj != nullptr)
-					{(r_obj->*f)(std::forward<Args>(args)...);}
+				(s_data.*f)(std::forward<Args>(args)...);
 				std::terminate();
 				}
 
-			[[nodiscard]] T& get() const
-				{return *r_obj;}
+			static T& exceptionPolicy()
+				{return s_data;}
+
+			static void exceptionPolicy(T&& data)
+				{s_data = std::move(data);}
 
 		private:
-			T* r_obj;
+			static thread_local T s_data;
 		};
+
+	template<class T, class Enable>
+	thread_local T ExceptionPolicyCaller<T,Enable>::s_data{};
+
 
 	template<class T>
 	class ExceptionPolicyCaller<T, std::enable_if_t<std::is_empty_v<T>>>
@@ -120,9 +122,25 @@ namespace DataStore
 				f(std::forward<Args>(args)...);
 				std::terminate();
 				}
-
-			void get() {}
 		};
+
+	template<class T>
+	class StaticSaveState
+		{
+		public:
+			explicit StaticSaveState(T& val) : m_val(val), r_val(val) {}
+
+			StaticSaveState(StaticSaveState const&) = delete;
+			StaticSaveState const& operator=(StaticSaveState const&) = delete;
+
+			~StaticSaveState()
+				{r_val = std::move(m_val);}
+
+		private:
+			T m_val;
+			T& r_val;
+		};
+
 
 	template<class ExceptionPolicy, class KeyType, class... Types>
 	class BasicCompound : private ExceptionPolicyCaller<ExceptionPolicy>
@@ -147,14 +165,6 @@ namespace DataStore
 				, std::vector<BasicCompound>
 				>;
 
-			template<class ... ExceptionHandlerArgs>
-			explicit BasicCompound(ExceptionHandlerArgs&& ... args) :
-				ExceptionHandler(std::forward<ExceptionHandlerArgs>(args)...)
-				{
-				static_assert((sizeof(BasicCompound)  == sizeof(MapType) && std::is_empty_v<ExceptionPolicy>)
-					|| !std::is_empty_v<ExceptionPolicy>);
-				}
-
 			template<class T, class KeyLike>
 			[[nodiscard]] T& get(KeyLike const& key)
 				{return const_cast<T&>(const_cast<BasicCompound const*>(this)->get<T>(key));}
@@ -169,13 +179,7 @@ namespace DataStore
 				{return m_content.find(key) != m_content.end();}
 
 			[[nodiscard]] BasicCompound create() const
-				{
-				if constexpr(std::is_empty_v<ExceptionPolicy>)
-					{return BasicCompound{};}
-				else
-					{return BasicCompound{ExceptionHandler::get()};}
-				}
-
+				{return BasicCompound{};}
 
 			template<class T>
 			BasicCompound& insert(key_type&& key, T&& value) &
@@ -220,9 +224,21 @@ namespace DataStore
 			[[nodiscard]] bool operator!=(BasicCompound const& other) const
 				{return m_content != other.m_content;}
 
-			template<class ExceptionPolicyModifier>
-			auto exceptionPolicy(ExceptionPolicyModifier&& how) const
-				{return how(ExceptionHandler::get());}
+			template<class Function>
+			auto withExceptionPolicy(ExceptionPolicy&& e, Function&& f) const
+				{
+				StaticSaveState state{ExceptionPolicyCaller<ExceptionPolicy>::exceptionPolicy()};
+				ExceptionPolicyCaller<ExceptionPolicy>::exceptionPolicy(std::move(e));
+				return f(*this);
+				}
+
+			template<class Function>
+			auto withExceptionPolicy(ExceptionPolicy&& e, Function&& f)
+				{
+				StaticSaveState<ExceptionPolicy> state{ExceptionPolicyCaller<ExceptionPolicy>::exceptionPolicy()};
+				ExceptionPolicyCaller<ExceptionPolicy>::exceptionPolicy(std::move(e));
+				return f(*this);
+				}
 
 		private:
 			using MapType = std::map<key_type, mapped_type, std::less<>>;

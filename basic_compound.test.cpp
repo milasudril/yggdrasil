@@ -109,8 +109,7 @@ int main()
 		}
 
 		{
-		Test::MyStatefulExceptionPolicy eh;
-		Test::CompoundStatefulEh sut{eh};
-		sut.insert(Test::KeyType{"Hello"}, Test::CompoundStatefulEh{eh});
+		Test::CompoundStatefulEh sut;
+		sut.insert(Test::KeyType{"Hello"}, Test::CompoundStatefulEh{});
 		}
 	}

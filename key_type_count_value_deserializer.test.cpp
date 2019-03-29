@@ -26,8 +26,7 @@ int main()
 		}
 
 		{
-		Test::MyStatefulExceptionPolicy eh;
-		Test::CompoundStatefulEh compound{eh};
+		Test::CompoundStatefulEh compound;
 
 		DataStore::MemReader memReader
 			{
