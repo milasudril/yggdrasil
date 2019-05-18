@@ -18,90 +18,69 @@ namespace Yggdrasil
 
 	enum class TypeId
 		{
-		// Signed integer types
-		 Int8
-		,Int16
-		,Int32
-		,Int64
-
-		// Unsigned integer types
-		,Uint8
-		,Uint16
-		,Uint32
-		,Uint64
-
-		// Floating point types
-		,Float8
-		,Float16
-		,Float32
-		,Float64
-
-		// Other types
-		,String
-		,Raw
-		,Reserved0
-		,Reserved1
-
-		// Vector versions of arthmetic types
-		,VecInt8
-		,VecInt16
-		,VecInt32
-		,VecInt64
-
+		 VecInt8
 		,VecUint8
-		,VecUint16
-		,VecUint32
-		,VecUint64
-
 		,VecFloat8
-		,VecFloat16
-		,VecFloat32
-		,VecFloat64
-
-		,Reserved2
 		,Reserved3
-		,Reserved4
+		,VecInt16
+		,VecUint16
+		,VecFloat16
+		,Reserved7
+		,VecInt32
+		,VecUint32
+		,VecFloat32
+		,Reserved11
+		,VecInt64
+		,VecUint64
+		,VecFloat64
+		,Reserved15
+		,Int8
+		,Uint8
+		,Float8
+		,String
+		,Int16
+		,Uint16
+		,Float16
+		,Reserved23
+		,Int32
+		,Uint32
+		,Float32
+		,Reserved27
+		,Int64
+		,Uint64
+		,Float64
 		,Compound
-
-		// Arrays
-		,ArrayInt8
-		,ArrayInt16
-		,ArrayInt32
-		,ArrayInt64
-
-		,ArrayUint8
-		,ArrayUint16
-		,ArrayUint32
-		,ArrayUint64
-
-		,ArrayFloat8
-		,ArrayFloat16
-		,ArrayFloat32
-		,ArrayFloat64
-
-		,ArrayString
-		,ArrayRaw
-		,ArrayReserved0
-		,ArrayReserved1
-
 		,ArrayVecInt8
-		,ArrayVecInt16
-		,ArrayVecInt32
-		,ArrayVecInt64
-
 		,ArrayVecUint8
-		,ArrayVecUint16
-		,ArrayVecUint32
-		,ArrayVecUint64
-
 		,ArrayVecFloat8
-		,ArrayVecFloat16
-		,ArrayVecFloat32
-		,ArrayVecFloat64
-
-		,ArrayReserved2
 		,ArrayReserved3
-		,ArrayReserved4
+		,ArrayVecInt16
+		,ArrayVecUint16
+		,ArrayVecFloat16
+		,ArrayReserved7
+		,ArrayVecInt32
+		,ArrayVecUint32
+		,ArrayVecFloat32
+		,ArrayReserved11
+		,ArrayVecInt64
+		,ArrayVecUint64
+		,ArrayVecFloat64
+		,ArrayReserved15
+		,ArrayInt8
+		,ArrayUint8
+		,ArrayFloat8
+		,ArrayString
+		,ArrayInt16
+		,ArrayUint16
+		,ArrayFloat16
+		,ArrayReserved23
+		,ArrayInt32
+		,ArrayUint32
+		,ArrayFloat32
+		,ArrayReserved27
+		,ArrayInt64
+		,ArrayUint64
+		,ArrayFloat64
 		,ArrayCompound
 		,Size
 		};

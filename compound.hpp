@@ -95,51 +95,37 @@ namespace Yggdrasil
 		<
 		 ExceptionPolicy
 		,KeyType
-
-		// Signed intger types
-		,int8_t
-		,int16_t
-		,int32_t
-		,int64_t
-
-		// Unsigned integer types
-		,uint8_t
-		,uint16_t
-		,uint32_t
-		,uint64_t
-
-		// Floating point types
-		,Minifloat
-		,Half
-		,float
-		,double
-
-		// Other types
-		,String
-		,std::byte
-		,Reserved<0>
-		,Reserved<1>
-
-		// Vector versions of arthmetic types
 		,vec4_t<int8_t>
-		,vec4_t<int16_t>
-		,vec4_t<int32_t>
-		,vec4_t<int64_t>
-
 		,vec4_t<uint8_t>
-		,vec4_t<uint16_t>
-		,vec4_t<uint32_t>
-		,vec4_t<uint64_t>
-
 		,vec4_t<Minifloat>
-		,vec4_t<Half>
-		,vec4_t<float>
-		,vec4_t<double>
-
-		// Other
-		,Reserved<2>
 		,Reserved<3>
-		,Reserved<4>
+        ,vec4_t<int16_t>
+		,vec4_t<uint16_t>
+		,vec4_t<Half>
+		,Reserved<7>
+		,vec4_t<int32_t>
+		,vec4_t<uint32_t>
+		,vec4_t<float>
+		,Reserved<11>
+		,vec4_t<int64_t>
+		,vec4_t<uint64_t>
+		,vec4_t<double>
+		,Reserved<15>
+		,int8_t
+		,uint8_t
+		,Minifloat
+		,String
+        ,int16_t
+		,uint16_t
+		,Half
+		,Reserved<23>
+		,int32_t
+		,uint32_t
+		,float
+		,Reserved<27>
+		,int64_t
+		,uint64_t
+		,double
 		>;
 
 	template<class ExceptionPolicy, class Source>

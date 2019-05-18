@@ -1,0 +1,19 @@
+Category: I U F O
+I = 00
+U = 01
+F = 10
+O = 11
+
+Size: 1 2 4 8
+1 = 00   # String when category = Other
+2 = 01
+4 = 10
+8 = 11   # Compound when category = Other
+
+Vector mode:
+Normal = 1   # Want "Compound" to be all ones
+Vector = 0
+
+Array mode:
+Normal = 0
+Array = 1

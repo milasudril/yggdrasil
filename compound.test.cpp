@@ -54,9 +54,8 @@ namespace ImplCheck
 	static_assert(SupportedTypes::getTypeIndex<double>() == static_cast<size_t>(Yggdrasil::TypeId::Float64));
 
 	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::String>() == static_cast<size_t>(Yggdrasil::TypeId::String));
-	static_assert(SupportedTypes::getTypeIndex<std::byte>() == static_cast<size_t>(Yggdrasil::TypeId::Raw));
-	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<0>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved0));
-	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<1>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved1));
+	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<3>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved3));
+	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<7>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved7));
 
 
 	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::vec4_t<int8_t>>() == static_cast<size_t>(Yggdrasil::TypeId::VecInt8));
@@ -74,9 +73,9 @@ namespace ImplCheck
 	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::vec4_t<float>>() == static_cast<size_t>(Yggdrasil::TypeId::VecFloat32));
 	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::vec4_t<double>>() == static_cast<size_t>(Yggdrasil::TypeId::VecFloat64));
 
-	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<2>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved2));
-	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<3>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved3));
-	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<4>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved4));
+	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<11>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved11));
+	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<15>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved15));
+	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Reserved<23>>() == static_cast<size_t>(Yggdrasil::TypeId::Reserved23));
 	static_assert(SupportedTypes::getTypeIndex<Yggdrasil::Compound<MyExceptionPolicy>>() == static_cast<size_t>(Yggdrasil::TypeId::Compound));
 
 
@@ -97,9 +96,7 @@ namespace ImplCheck
 	static_assert(SupportedTypes::getTypeIndex<std::vector<double>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayFloat64));
 
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::String>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayString));
-	static_assert(SupportedTypes::getTypeIndex<std::vector<std::byte>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayRaw));
-	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<0>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved0));
-	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<1>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved1));
+	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<27>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved27));
 
 
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::vec4_t<int8_t>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayVecInt8));
@@ -117,9 +114,6 @@ namespace ImplCheck
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::vec4_t<float>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayVecFloat32));
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::vec4_t<double>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayVecFloat64));
 
-	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<2>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved2));
-	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<3>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved3));
-	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Reserved<4>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayReserved4));
 	static_assert(SupportedTypes::getTypeIndex<std::vector<Yggdrasil::Compound<MyExceptionPolicy>>>() == static_cast<size_t>(Yggdrasil::TypeId::ArrayCompound));
 	}
 
