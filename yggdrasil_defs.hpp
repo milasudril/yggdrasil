@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cassert>
 
 namespace Yggdrasil
 	{
@@ -16,7 +17,7 @@ namespace Yggdrasil
 	constexpr size_t ArrayElemCountSize{4};
 	constexpr size_t TypeIdSize{1};
 
-	enum class TypeId
+	enum class TypeIdValue : uint8_t
 		{
 		 VecInt8
 		,VecUint8
@@ -86,6 +87,93 @@ namespace Yggdrasil
 		};
 
 	static_assert(TypeId::Size == static_cast<TypeId>(64));
+
+	enum class TypeCategory : uint8_t {Integer, UnsignedInteger, Float, String, Object};
+	enum class ElementSize : uint8_t {ONE, TWO, FOUR, EIGHT};
+
+	class TypeAttribute
+		{
+		static constexpr uint8_t Vector = 1;
+		static constexpr uint8_t Array = 2;
+		};
+
+	class TypeId
+		{
+		public:
+			constexpr TypeId(TypeIdValue val) : m_value{static_cast<uint8_t>(val)}{}
+			constexpr TypeId& attributes(TypeAttribute);
+
+			constexpr TypeId& size(ElementSize size)
+				{
+				assert(category()!=TypeCategory::String && category()!=TypeCategory::Object);
+				m_value &= ~SIZE_MASK;
+				m_value |= (static_cast<uint8_t>(size) << SIZE_SHIFT);
+				return *this;
+				}
+
+			constexpr TypeId& category(TypeCategory cat)
+				{
+				if(cat==TypeCategory::String || cat==TypeCategory::Object)
+					{
+					category_field(0x3);
+					size_field(cat == TypeCategory::String? 0x0 : 0x3);
+					}
+				else
+					{category_field(static_cast<uint8_t>(cat));}
+				return *this;
+				}
+
+			constexpr TypeCategory category() const
+				{
+				auto val = category_field();
+				if(val == 0x3)
+					{return size_field() == 0? TypeCategory::String : TypeCategory::Object;}
+				else
+					{return static_cast<}
+				}
+
+			constexpr ElementSize size()
+				{return static_cast<ElementSize>( (m_value&SIZE_MASK)>>SIZE_SHIFT );}
+
+			constexpr TypeIdValue value() const
+				{return static_cast<TypeIdValue>(m_id);}
+
+		private:
+			uint8_t m_value;
+
+			static constexpr uint8_t ATTRIBUTE_MASK = 0x30;
+			static constexpr uint8_t SizeMask = 0x0c;
+			static constexpr uint8_t SizeShift = 2;
+			static constexpr uint8_t CategoryMask = 0x03;
+			static constexpr uint8_t CategoryShift =0;
+
+			static_assert((ATTRIBUTE_MASK|SizeShift|CategoryMask) == 0x3f);
+
+			constexpr void size_field(uint8_t val)
+				{
+				m_value&=~SizeMask;
+				m_value|=(val << SizeShift);
+				}
+
+			constexpr uint8_t size_field() const
+				{return (m_value&SizeMask) >> SizeShift;}
+
+			constexpr void category_field(uint8_t val)
+				{
+				m_value&=~CategoryMask;
+				m_value|=(val<< CategoryShift);
+				}
+
+			constexpr uint8_t category_field() const
+				{return (m_value&CategoryMask) >> CategoryShift;}
+		};
+
+	constexpr inline bool operator==(TypeId a, TypeId b)
+		{return a.value() == b.value();}
+
+	constexpr inline bool operator!=(TypeId a, TypeId b)
+		{return !(a==b);}
+
 	}
 
 #endif
